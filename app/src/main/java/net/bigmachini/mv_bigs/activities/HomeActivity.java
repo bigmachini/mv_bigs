@@ -18,12 +18,16 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ScrollView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.macroyau.blue2serial.BluetoothDeviceListDialog;
 import com.macroyau.blue2serial.BluetoothSerial;
 import com.macroyau.blue2serial.BluetoothSerialListener;
 
+import net.bigmachini.mv_bigs.Constants;
+import net.bigmachini.mv_bigs.Global;
 import net.bigmachini.mv_bigs.R;
 import net.bigmachini.mv_bigs.Utils;
 import net.bigmachini.mv_bigs.adapters.UserAdapter;
@@ -47,6 +51,10 @@ public class HomeActivity extends AppCompatActivity
     private MenuItem actionConnect, actionDisconnect;
     public BluetoothSerial bluetoothSerial;
 
+
+    private ScrollView svTerminal;
+    private TextView tvTerminal;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,6 +66,8 @@ public class HomeActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
+                checkBluetooth();
                 if (!bluetoothSerial.isConnected()) {
                     Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
                 } else {
@@ -71,6 +81,8 @@ public class HomeActivity extends AppCompatActivity
         btnDelete = findViewById(R.id.btn_delete);
 
         mRecyclerView = findViewById(R.id.rv_users);
+        svTerminal = findViewById(R.id.sv_terminal);
+        tvTerminal = findViewById(R.id.tv_terminal);
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
@@ -84,15 +96,20 @@ public class HomeActivity extends AppCompatActivity
         btnDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                List<UserModel> dUsers = new ArrayList<>(mAdapter.getUsers());
-                for (int i = dUsers.size() - 1; i >= 0; i--) {
-                    if (dUsers.get(i).isSelected()) {
-                        Log.e(TAG, "Username : " + dUsers.get(i).name);
-                        dUsers.remove(i);
+                checkBluetooth();
+                if (!bluetoothSerial.isConnected()) {
+                    Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
+                } else {
+                    List<UserModel> dUsers = new ArrayList<>(mAdapter.getUsers());
+                    for (int i = dUsers.size() - 1; i >= 0; i--) {
+                        if (dUsers.get(i).isSelected()) {
+                            Log.e(TAG, "Username : " + dUsers.get(i).name);
+                            dUsers.remove(i);
+                        }
                     }
+                    mAdapter.clear();
+                    mAdapter.updateList(dUsers);
                 }
-                mAdapter.clear();
-                mAdapter.updateList(dUsers);
             }
         });
 
@@ -116,13 +133,21 @@ public class HomeActivity extends AppCompatActivity
         checkBluetooth();
     }
 
-    public void checkBluetooth()
-    {
+    public void checkBluetooth() {
         if (bluetoothSerial.checkBluetooth() && bluetoothSerial.isBluetoothEnabled()) {
             if (!bluetoothSerial.isConnected()) {
                 bluetoothSerial.start();
             }
         }
+    }
+
+    public boolean checkIfConnected() {
+        if (bluetoothSerial.checkBluetooth() && bluetoothSerial.isBluetoothEnabled()) {
+            return true;
+        } else {
+            return false;
+        }
+
     }
 
     @Override
@@ -278,20 +303,37 @@ public class HomeActivity extends AppCompatActivity
 
     @Override
     public void onBluetoothSerialRead(String message) {
-//        // Print the incoming message on the terminal screen
-//        tvTerminal.append(getString(R.string.terminal_message_template,
-//                bluetoothSerial.getConnectedDeviceName(),
-//                message));
-//        svTerminal.post(scrollTerminalToBottom);
+        // Print the incoming message on the terminal screen
+        tvTerminal.append(getString(R.string.terminal_message_template,
+                bluetoothSerial.getConnectedDeviceName(),
+                message));
+        svTerminal.post(scrollTerminalToBottom);
+
+        switch (Global.gSelectedAction) {
+            case Constants.ENROLL:
+            case Constants.DELETE:
+                if (Global.gSelectedKey == Integer.parseInt(message)) {
+                    UserModel.saveUser(mContext, Global.gSelectedUser);
+                    Global.gSelectedUser = null;
+                }
+                break;
+
+            case Constants.DELETE_ALL:
+                if (new String(Constants.DELETE_ALL).equals(new String(message))) {
+                    UserModel.saveUser(mContext, Global.gSelectedUser);
+                    Global.gSelectedUser = null;
+                }
+                break;
+        }
     }
 
     @Override
     public void onBluetoothSerialWrite(String message) {
         // Print the outgoing message on the terminal screen
-//        tvTerminal.append(getString(R.string.terminal_message_template,
-//                bluetoothSerial.getLocalAdapterName(),
-//                message));
-//        svTerminal.post(scrollTerminalToBottom);
+        tvTerminal.append(getString(R.string.terminal_message_template,
+                bluetoothSerial.getLocalAdapterName(),
+                message));
+        svTerminal.post(scrollTerminalToBottom);
     }
 
     /* Implementation of BluetoothDeviceListDialog.OnDeviceSelectedListener */
@@ -307,8 +349,8 @@ public class HomeActivity extends AppCompatActivity
     private final Runnable scrollTerminalToBottom = new Runnable() {
         @Override
         public void run() {
-            // Scroll the terminal screen to the bottom
-            // svTerminal.fullScroll(ScrollView.FOCUS_DOWN);
+            //Scroll the terminal screen to the bottom
+            svTerminal.fullScroll(ScrollView.FOCUS_DOWN);
         }
     };
 }

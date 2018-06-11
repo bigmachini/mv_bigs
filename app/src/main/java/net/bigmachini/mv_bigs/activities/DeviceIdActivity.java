@@ -23,6 +23,7 @@ import com.macroyau.blue2serial.BluetoothDeviceListDialog;
 import com.macroyau.blue2serial.BluetoothSerial;
 import com.macroyau.blue2serial.BluetoothSerialListener;
 
+import net.bigmachini.mv_bigs.Constants;
 import net.bigmachini.mv_bigs.Global;
 import net.bigmachini.mv_bigs.R;
 import net.bigmachini.mv_bigs.Utils;
@@ -62,9 +63,10 @@ public class DeviceIdActivity extends AppCompatActivity
                     Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
                 } else {
                     int key = Utils.incrementCounter(mContext, 1);
-                    userModel.addKey(key);                    UserModel.saveUser(mContext, userModel);
+                    userModel.addKey(key);
                     Global.gSelectedKey = key;
-                    bluetoothSerial.write(String.valueOf(key));
+                    Utils.sendMessage(bluetoothSerial, Constants.ENROLL, key);
+                    UserModel.saveUser(mContext, userModel);
                 }
             }
         });
@@ -123,12 +125,9 @@ public class DeviceIdActivity extends AppCompatActivity
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_login, menu);
-
         actionConnect = menu.findItem(R.id.action_connect);
         actionDisconnect = menu.findItem(R.id.action_disconnect);
-
         return true;
     }
 

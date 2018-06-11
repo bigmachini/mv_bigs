@@ -11,7 +11,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import net.bigmachini.mv_bigs.R;
-import net.bigmachini.mv_bigs.Utils;
 import net.bigmachini.mv_bigs.activities.DeviceIdActivity;
 import net.bigmachini.mv_bigs.models.UserModel;
 
@@ -60,32 +59,21 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
     public void onBindViewHolder(final ViewHolder holder, final int position) {
         final int device = mDevices.get(position);
         holder.tvName.setText(userModel.name + " : " + device);
-
         holder.view.setBackgroundColor(Color.LTGRAY);
-        holder.view.setOnClickListener(new View.OnClickListener() {
+        holder.ivDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (!((DeviceIdActivity) mContext).bluetoothSerial.isConnected()) {
                     Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
                 } else {
-                    int key = Utils.incrementCounter(mContext, 1);
-                    userModel.addKey(key);
-                    UserModel.saveUser(mContext, userModel);
-                    ((DeviceIdActivity) mContext).bluetoothSerial.write(String.valueOf(key));
+                    mDevices.remove(position);
+                    userModel.ids = mDevices;
+                    List<UserModel> userModels = UserModel.getUsers(mContext);
+                    int indexOf = userModels.indexOf(userModel);
+                    userModels.set(indexOf, userModel);
+                    UserModel.saveList(mContext, userModels);
+                    notifyDataSetChanged();
                 }
-            }
-        });
-
-        holder.ivDelete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mDevices.remove(position);
-                userModel.ids = mDevices;
-                List<UserModel> userModels = UserModel.getUsers(mContext);
-                int indexOf = userModels.indexOf(userModel);
-                userModels.set(indexOf, userModel);
-                UserModel.saveList(mContext, userModels);
-                notifyDataSetChanged();
             }
         });
     }

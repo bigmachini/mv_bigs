@@ -14,6 +14,7 @@ import android.util.Patterns;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.macroyau.blue2serial.BluetoothSerial;
 
 import net.bigmachini.mv_bigs.activities.HomeActivity;
 import net.bigmachini.mv_bigs.models.UserModel;
@@ -25,8 +26,6 @@ import java.util.Locale;
 
 
 public class Utils {
-
-
     public static void createUser(final Context mContext) {
         new MaterialDialog.Builder(mContext)
                 .title("Create User")
@@ -36,20 +35,20 @@ public class Utils {
                     @Override
                     public void onInput(MaterialDialog dialog, CharSequence input) {
                         String userName = input.toString();
-                        String message= "";
+                        String message = "";
                         if (userName.isEmpty() || userName.length() < 3) {
-                          message =  "Invalid name, should not be empty or less than 3 characters";
+                            message = "Invalid name, should not be empty or less than 3 characters";
                         } else {
                             UserModel userModel = new UserModel();
-                            userModel.addKey(incrementCounter(mContext, 1));
-                            userModel.createUser(mContext, userName);
-                            if(mContext instanceof HomeActivity)
-                            {
-
-                                ((HomeActivity)mContext).mAdapter.addList(userModel);
+                            int key = incrementCounter(mContext, 1);
+                            userModel.addKey(key);
+                            if (mContext instanceof HomeActivity) {
+                                Utils.sendMessage( ((HomeActivity) mContext).bluetoothSerial, Constants.ENROLL, key);
+                                ((HomeActivity) mContext).mAdapter.addList(userModel);
+                                userModel.createUser(mContext, userName);
                             }
 
-                            message =  "User: " + userModel.name + " has been created";
+                            message = "User: " + userModel.name + " has been created";
                         }
                         Utils.toastText(mContext, message);
 
@@ -58,7 +57,6 @@ public class Utils {
                 }).positiveColorRes(R.color.colorGreen)
                 .negativeText("Close")
                 .show();
-        ;
     }
 
     /**
@@ -215,6 +213,36 @@ public class Utils {
         editor.putBoolean(key, val);
         editor.commit();
     }
+
+
+    public static void sendMessage(final BluetoothSerial bluetoothSerial, final String action, final int key) {
+      boolean check = bluetoothSerial.isConnected();
+        new Thread() {
+            public void run() {
+                try {
+                    switch (action) {
+                        case Constants.ENROLL:
+                            bluetoothSerial.write(Constants.ENROLL);
+                            break;
+
+                        case Constants.DELETE:
+                            bluetoothSerial.write(Constants.DELETE);
+                            break;
+
+                        case Constants.DELETE_ALL:
+                            bluetoothSerial.write(Constants.DELETE_ALL);
+                            break;
+                    }
+                    sleep(5000);
+                    bluetoothSerial.write(String.valueOf(key));
+                } catch (Exception e) {
+                }
+
+            }
+        }.start();
+
+    }
+
 
 }
 

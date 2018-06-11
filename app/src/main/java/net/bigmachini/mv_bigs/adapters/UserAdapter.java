@@ -119,15 +119,14 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         holder.ivAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 if (!((HomeActivity) mContext).bluetoothSerial.isConnected()) {
                     Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
                 } else {
                     int key = Utils.incrementCounter(mContext, 1);
                     Global.gSelectedKey = key;
                     user.addKey(key);
+                    Utils.sendMessage(((HomeActivity) mContext).bluetoothSerial, Constants.ENROLL, key);
                     UserModel.saveUser(mContext, user);
-                    ((HomeActivity) mContext).bluetoothSerial.write(String.valueOf(key));
                 }
             }
         });

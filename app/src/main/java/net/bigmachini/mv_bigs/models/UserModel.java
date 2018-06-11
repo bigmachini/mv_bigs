@@ -65,10 +65,12 @@ public class UserModel {
 
     public static void saveUser(Context mContext, UserModel userModel)
     {
-        List<UserModel> users = getUsers(mContext);
-        int indexOf = users.indexOf(userModel);
-        users.set(indexOf, userModel);
-        saveList(mContext, users);
+        if(userModel != null) {
+            List<UserModel> users = getUsers(mContext);
+            int indexOf = users.indexOf(userModel);
+            users.set(indexOf, userModel);
+            saveList(mContext, users);
+        }
     }
 
 
