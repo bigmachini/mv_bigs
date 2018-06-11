@@ -42,6 +42,8 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+        fab.setVisibility(View.GONE);
+
         btnLogin = findViewById(R.id.btn_login);
         etPin = findViewById(R.id.et_pin);
         final Context mContext = LoginActivity.this;
