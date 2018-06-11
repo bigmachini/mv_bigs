@@ -8,17 +8,21 @@
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
 
-    <string name="activity_scan_button">Scan again</string>
-    <string name="activity_scan_paired_text">Paired Devices :</string>
 
-    <string name="bluetooth_scanning">Scanning…</string>
-    <string name="bluetooth_scan_finished">Scan finished.</string>
-    <string name="bluetooth_pairing">Pairing…</string>
-    <string name="bluetooth_paired">Device Paired.</string>
-    <string name="bluetooth_unpaired">Device Unpaired.</string>
-    <string name="bluetooth_connected">Device Connected.</string>
-    <string name="bluetooth_connecting">Connecting…</string>
-    <string name="bluetooth_disconnected">Device Disconnected.</string>
-    <string name="bluetooth_connect_in_3sec">Could not connect. New attempt in 3sec…</string>
-    <string name="bluetooth_turning_on">Turning bluetooth on…</string>
+    <string name="status_disconnected">Disconnected</string>
+    <string name="status_connecting">Connecting&#8230;</string>
+    <string name="status_connected">Connected to %1$s</string>
+
+    <string name="action_connect">Connect</string>
+    <string name="action_disconnect">Disconnect</string>
+    <string name="action_crlf">CRLF</string>
+    <string name="action_quit">Quit</string>
+
+    <string name="no_bluetooth">Bluetooth is not available on this device.</string>
+    <string name="paired_devices">Choose a paired Bluetooth device</string>
+
+    <string name="command_hint">Enter command here...</string>
+
+    <string name="terminal_message_template">%1$s > %2$s\n</string>
+    <string name="title_activity_device_id">DeviceIdActivity</string>
 </resources>

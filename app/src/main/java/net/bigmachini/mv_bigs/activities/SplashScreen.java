@@ -25,7 +25,7 @@ public class SplashScreen extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash_screen);
         final Context mContext = SplashScreen.this;
-
+        Utils.setIntSetting(mContext, Constants.COUNTER, 0);
         final Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
@@ -41,6 +41,8 @@ public class SplashScreen extends AppCompatActivity {
                 finish();
             }
         }, 3000);
+
+       // Utils.setStringSetting(mContext, Constants.USERS, "[]");
 
     }
 

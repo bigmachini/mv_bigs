@@ -2,7 +2,6 @@ package net.bigmachini.mv_bigs;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
@@ -22,10 +21,11 @@ import net.bigmachini.mv_bigs.models.UserModel;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 
+
 public class Utils {
+
 
     public static void createUser(final Context mContext) {
         new MaterialDialog.Builder(mContext)
@@ -36,25 +36,33 @@ public class Utils {
                     @Override
                     public void onInput(MaterialDialog dialog, CharSequence input) {
                         String userName = input.toString();
+                        String message= "";
                         if (userName.isEmpty() || userName.length() < 3) {
-                            Utils.toastText(mContext, "Invalid name, should not be empty or less than 3 characters");
-
-
+                          message =  "Invalid name, should not be empty or less than 3 characters";
                         } else {
                             UserModel userModel = new UserModel();
+                            userModel.addKey(incrementCounter(mContext, 1));
                             userModel.createUser(mContext, userName);
-                            List<UserModel> users = UserModel.getUsers(mContext);
-                            mContext.startActivity(new Intent(mContext, HomeActivity.class));
-                            ((Activity) mContext).finish();
+                            if(mContext instanceof HomeActivity)
+                            {
+                                ((HomeActivity)mContext).mAdapter.addList(userModel);
+                            }
+
+                            message =  "User: " + userModel.name + " has been created";
                         }
+                        Utils.toastText(mContext, message);
+
+                        dialog.dismiss();
                     }
                 }).positiveColorRes(R.color.colorGreen)
                 .negativeText("Close")
                 .show();
         ;
     }
+
     /**
      * Create a dialog with an icon
+     *
      * @param context
      * @param title
      * @param errorMessage
@@ -69,9 +77,19 @@ public class Utils {
                 .show();
     }
 
+    public static int incrementCounter(Context mContext, int i) {
+        int counter = Utils.getIntSetting(mContext, Constants.COUNTER, 0) + i;
+        saveCounte(mContext, counter);
+        return counter;
+    }
+
+    private static void saveCounte(Context mContext, int count) {
+        Utils.setIntSetting(mContext, Constants.COUNTER, count);
+    }
 
     /**
      * Create a dialog without an icon
+     *
      * @param context
      * @param title
      * @param errorMessage
@@ -86,10 +104,10 @@ public class Utils {
 
     /**
      * Return current date as a sting
+     *
      * @return
      */
-    public static String getCurrentDate()
-    {
+    public static String getCurrentDate() {
         Date c = Calendar.getInstance().getTime();
         System.out.println("Current time => " + c);
 
@@ -115,6 +133,7 @@ public class Utils {
 
     /**
      * Verifies phone number, takes in phone, lenght and what it should start with
+     *
      * @param phone
      * @param length
      * @param startWith

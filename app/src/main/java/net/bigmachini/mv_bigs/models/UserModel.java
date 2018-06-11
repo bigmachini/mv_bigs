@@ -8,6 +8,7 @@ import com.google.gson.reflect.TypeToken;
 import net.bigmachini.mv_bigs.Constants;
 import net.bigmachini.mv_bigs.Utils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,6 +27,9 @@ public class UserModel {
     }
 
     public void addKey(int key) {
+        if (this.ids == null) {
+            this.ids = new ArrayList<>();
+        }
         this.ids.add(key);
     }
 
@@ -53,6 +57,10 @@ public class UserModel {
     public static List<UserModel> getUsers(Context mContext) {
         return new Gson().fromJson(Utils.getStringSetting(mContext, Constants.USERS, "[]"), new TypeToken<List<UserModel>>() {
         }.getType());
+    }
+
+    public static void saveList(Context mContext, List<UserModel> users) {
+        Utils.setStringSetting(mContext, Constants.USERS, new Gson().toJson(users).toString());
     }
 
 

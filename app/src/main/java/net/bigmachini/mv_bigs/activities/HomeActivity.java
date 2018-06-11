@@ -1,66 +1,73 @@
 package net.bigmachini.mv_bigs.activities;
 
+import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
-import com.afollestad.materialdialogs.MaterialDialog;
+import com.macroyau.blue2serial.BluetoothDeviceListDialog;
+import com.macroyau.blue2serial.BluetoothSerial;
+import com.macroyau.blue2serial.BluetoothSerialListener;
 
 import net.bigmachini.mv_bigs.R;
 import net.bigmachini.mv_bigs.Utils;
-import net.bigmachini.mv_bigs.adapters.DeviceAdapter;
-import net.bigmachini.mv_bigs.adapters.PairedDeviceAdapter;
 import net.bigmachini.mv_bigs.adapters.UserAdapter;
 import net.bigmachini.mv_bigs.models.UserModel;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import me.aflak.bluetooth.Bluetooth;
-import me.aflak.bluetooth.BluetoothCallback;
-import me.aflak.bluetooth.DiscoveryCallback;
+public class HomeActivity extends AppCompatActivity
+        implements BluetoothSerialListener, BluetoothDeviceListDialog.OnDeviceSelectedListener {
 
-public class HomeActivity extends AppCompatActivity {
-
-    private RecyclerView mRecyclerView;
-    private RecyclerView.Adapter mAdapter;
+    private static final String TAG = HomeActivity.class.getSimpleName();
+    public RecyclerView mRecyclerView;
+    public UserAdapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
-    private List<UserModel> videoModelList = new ArrayList<>();
     private Context mContext;
-    private static Bluetooth bluetooth;
     private Button btnDelete;
-    private MaterialDialog dialog;
-    private PairedDeviceAdapter pAdapter;
-    private DeviceAdapter dAdapter;
-    List<BluetoothDevice> devices;
+    public List<UserModel> users;
+    private boolean crlf = false;
+    private static final int REQUEST_ENABLE_BLUETOOTH = 1;
+    private MenuItem actionConnect, actionDisconnect;
+    public BluetoothSerial bluetoothSerial;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                dialogTEst();
-                // Utils.createUser(mContext);
+                if (!bluetoothSerial.isConnected()) {
+                    Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
+                } else {
+                    Utils.createUser(mContext);
+                }
             }
         });
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mContext = HomeActivity.this;
-
-        bluetooth = new Bluetooth(HomeActivity.this);
         btnDelete = findViewById(R.id.btn_delete);
 
         mRecyclerView = findViewById(R.id.rv_users);
@@ -73,151 +80,235 @@ public class HomeActivity extends AppCompatActivity {
         mLayoutManager = new LinearLayoutManager(mContext);
 
         mRecyclerView.setLayoutManager(mLayoutManager);
+        users = UserModel.getUsers(mContext);
+        btnDelete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                List<UserModel> dUsers = new ArrayList<>(mAdapter.getUsers());
+                for (int i = dUsers.size() - 1; i >= 0; i--) {
+                    if (dUsers.get(i).isSelected()) {
+                        Log.e(TAG, "Username : " + dUsers.get(i).name);
+                        dUsers.remove(i);
+                    }
+                }
+                mAdapter.clear();
+                mAdapter.updateList(dUsers);
+            }
+        });
 
-        List<UserModel> users = UserModel.getUsers(mContext);
         // specify an adapter (see also next example)
         mAdapter = new UserAdapter(mContext, users, btnDelete);
         mRecyclerView.setAdapter(mAdapter);
+        // Create a new instance of BluetoothSerial
+        bluetoothSerial = new BluetoothSerial(this, this);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Check Bluetooth availability on the device and set up the Bluetooth adapter
+        bluetoothSerial.setup();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        bluetooth.onStart();
+        checkBluetooth();
+    }
 
-        if (!bluetooth.isEnabled())
-            bluetooth.enable();
+    public void checkBluetooth()
+    {
+        if (bluetoothSerial.checkBluetooth() && bluetoothSerial.isBluetoothEnabled()) {
+            if (!bluetoothSerial.isConnected()) {
+                bluetoothSerial.start();
+            }
+        }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        bluetooth.onStop();
+
+        // Disconnect from the remote device and close the serial port
+        bluetoothSerial.stop();
     }
 
-    private void showSectionSelectionDialog() {
-        if (dialog == null) {
-            RecyclerView recyclerView = new RecyclerView(this);
-            recyclerView.setLayoutManager(new LinearLayoutManager(this));
-            pAdapter = new PairedDeviceAdapter(mContext, bluetooth.getPairedDevices());
-            recyclerView.setAdapter(pAdapter);
-            dialog = new MaterialDialog.Builder(this)
-                    .customView(recyclerView, true)
-                    .build();
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_login, menu);
+
+        actionConnect = menu.findItem(R.id.action_connect);
+        actionDisconnect = menu.findItem(R.id.action_disconnect);
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_connect) {
+            showDeviceListDialog();
+            return true;
+        } else if (id == R.id.action_disconnect) {
+            bluetoothSerial.stop();
+            return true;
+        } else if (id == R.id.action_crlf) {
+            crlf = !item.isChecked();
+            item.setChecked(crlf);
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void invalidateOptionsMenu() {
+        if (bluetoothSerial == null)
+            return;
+
+        // Show or hide the "Connect" and "Disconnect" buttons on the app bar
+        if (bluetoothSerial.isConnected()) {
+            if (actionConnect != null)
+                actionConnect.setVisible(false);
+            if (actionDisconnect != null)
+                actionDisconnect.setVisible(true);
         } else {
-            pAdapter.notifyDataSetChanged();
+            if (actionConnect != null)
+                actionConnect.setVisible(true);
+            if (actionDisconnect != null)
+                actionDisconnect.setVisible(false);
         }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch (requestCode) {
+            case REQUEST_ENABLE_BLUETOOTH:
+                // Set up Bluetooth serial port when Bluetooth adapter is turned on
+                if (resultCode == Activity.RESULT_OK) {
+                    bluetoothSerial.setup();
+                }
+                break;
+        }
+    }
+
+    private void updateBluetoothState() {
+        // Get the current Bluetooth state
+        final int state;
+        if (bluetoothSerial != null)
+            state = bluetoothSerial.getState();
+        else
+            state = BluetoothSerial.STATE_DISCONNECTED;
+
+        // Display the current state on the app bar as the subtitle
+        String subtitle;
+        switch (state) {
+            case BluetoothSerial.STATE_CONNECTING:
+                subtitle = getString(R.string.status_connecting);
+                break;
+            case BluetoothSerial.STATE_CONNECTED:
+                subtitle = getString(R.string.status_connected, bluetoothSerial.getConnectedDeviceName());
+                break;
+            default:
+                subtitle = getString(R.string.status_disconnected);
+                break;
+        }
+
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setSubtitle(subtitle);
+        }
+    }
+
+    private void showDeviceListDialog() {
+        // Display dialog for selecting a remote Bluetooth device
+        BluetoothDeviceListDialog dialog = new BluetoothDeviceListDialog(this);
+        dialog.setOnDeviceSelectedListener(this);
+        dialog.setTitle(R.string.paired_devices);
+        dialog.setDevices(bluetoothSerial.getPairedDevices());
+        dialog.showAddress(true);
         dialog.show();
     }
 
-    private void dialogTEst() {
-        MaterialDialog dialog = new MaterialDialog.Builder(mContext)
-                .customView(R.layout.dialog_devices, true)
-                .title("Select Device")
-                .build();
+    /* Implementation of BluetoothSerialListener */
 
-        View dialogView = dialog.getCustomView();
-        final RecyclerView rvPariedDevice = dialogView.findViewById(R.id.rv_paired_devices);
-        final RecyclerView rvDevice = dialogView.findViewById(R.id.rv_devices);
-        final Button btnScan = dialogView.findViewById(R.id.btn_scan);
-
-        bluetooth.startScanning();
-        bluetooth.setDiscoveryCallback(discoveryCallback);
-        bluetooth.setBluetoothCallback(bluetoothCallback);
-
-        rvPariedDevice.setHasFixedSize(true);
-
-        // use a linear layout manager
-        mLayoutManager = new LinearLayoutManager(mContext);
-
-        rvPariedDevice.setLayoutManager(mLayoutManager);
-
-        List<BluetoothDevice> pDevices = bluetooth.getPairedDevices();
-        // specify an adapter (see also next example)
-        pAdapter = new PairedDeviceAdapter(mContext, pDevices);
-        mRecyclerView.setAdapter(pAdapter);
-
-
-        rvDevice.setHasFixedSize(true);
-
-        // use a linear layout manager
-        mLayoutManager = new LinearLayoutManager(mContext);
-
-        rvDevice.setLayoutManager(mLayoutManager);
-        devices = new ArrayList<>();
-        // specify an adapter (see also next example)
-        dAdapter = new DeviceAdapter(mContext, devices);
-        rvDevice.setAdapter(dAdapter);
-
-        btnScan.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                devices.clear();
-                bluetooth.startScanning();
-
-            }
-        });
-
-        dAdapter.notifyDataSetChanged();
-
-        dialog.show();
+    @Override
+    public void onBluetoothNotSupported() {
+        new AlertDialog.Builder(this)
+                .setMessage(R.string.no_bluetooth)
+                .setPositiveButton(R.string.action_quit, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                })
+                .setCancelable(false)
+                .show();
     }
 
-    private DiscoveryCallback discoveryCallback = new DiscoveryCallback() {
-        @Override
-        public void onDiscoveryStarted() {
-            Utils.toastText(mContext, "Discovery started");
-        }
+    @Override
+    public void onBluetoothDisabled() {
+        Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+        startActivityForResult(enableBluetooth, REQUEST_ENABLE_BLUETOOTH);
+    }
 
-        @Override
-        public void onDiscoveryFinished() {
-            Utils.toastText(mContext, "Discovery Finished");
-        }
+    @Override
+    public void onBluetoothDeviceDisconnected() {
+        invalidateOptionsMenu();
+        updateBluetoothState();
+    }
 
-        @Override
-        public void onDeviceFound(BluetoothDevice device) {
-            devices.add(device);
-        }
+    @Override
+    public void onConnectingBluetoothDevice() {
+        updateBluetoothState();
+    }
 
-        @Override
-        public void onDevicePaired(BluetoothDevice device) {
-            Utils.createUser(mContext);
-        }
+    @Override
+    public void onBluetoothDeviceConnected(String name, String address) {
+        invalidateOptionsMenu();
+        updateBluetoothState();
+    }
 
-        @Override
-        public void onDeviceUnpaired(BluetoothDevice device) {
-        }
+    @Override
+    public void onBluetoothSerialRead(String message) {
+//        // Print the incoming message on the terminal screen
+//        tvTerminal.append(getString(R.string.terminal_message_template,
+//                bluetoothSerial.getConnectedDeviceName(),
+//                message));
+//        svTerminal.post(scrollTerminalToBottom);
+    }
 
-        @Override
-        public void onError(String message) {
-            Utils.toastText(mContext, message);
-        }
-    };
+    @Override
+    public void onBluetoothSerialWrite(String message) {
+        // Print the outgoing message on the terminal screen
+//        tvTerminal.append(getString(R.string.terminal_message_template,
+//                bluetoothSerial.getLocalAdapterName(),
+//                message));
+//        svTerminal.post(scrollTerminalToBottom);
+    }
 
-    private BluetoothCallback bluetoothCallback = new BluetoothCallback() {
-        @Override
-        public void onBluetoothTurningOn()  {
-            Utils.toastText(mContext, getString(R.string.bluetooth_turning_on));
-        }
+    /* Implementation of BluetoothDeviceListDialog.OnDeviceSelectedListener */
 
-        @Override
-        public void onBluetoothOn() {
-            bluetooth.startScanning();
-            dialogTEst();
-        }
+    @Override
+    public void onBluetoothDeviceSelected(BluetoothDevice device) {
+        // Connect to the selected remote Bluetooth device
+        bluetoothSerial.connect(device);
+    }
 
-        @Override
-        public void onBluetoothTurningOff() {
-            bluetooth.stopScanning();
-            Utils.toastText(mContext, "You need to enable your bluetooth...");
-        }
+    /* End of the implementation of listeners */
 
+    private final Runnable scrollTerminalToBottom = new Runnable() {
         @Override
-        public void onBluetoothOff() {
-        }
-
-        @Override
-        public void onUserDeniedActivation() {
+        public void run() {
+            // Scroll the terminal screen to the bottom
+            // svTerminal.fullScroll(ScrollView.FOCUS_DOWN);
         }
     };
 }

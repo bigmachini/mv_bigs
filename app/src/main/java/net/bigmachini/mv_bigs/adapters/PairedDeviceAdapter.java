@@ -1,66 +1,76 @@
 package net.bigmachini.mv_bigs.adapters;
 
-import android.bluetooth.BluetoothDevice;
-import android.content.Context;
-import android.graphics.Color;
-import android.support.v7.widget.RecyclerView;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.TextView;
+public class PairedDeviceAdapter  {
 
-import net.bigmachini.mv_bigs.R;
+ /*   private final Context mContext;
+    private final List<BluetoothDeviceDecorator> mDevices;
+    private final LayoutInflater mInflater;
+    private OnAdapterItemClickListener mOnItemClickListener;
 
-import java.util.List;
 
-public class PairedDeviceAdapter extends RecyclerView.Adapter<PairedDeviceAdapter.ViewHolder> {
-    private final Context mContext;
-    private List<BluetoothDevice> mDevices;
-    Button btnDelete;
-
-    public PairedDeviceAdapter(Context context, List<BluetoothDevice> mDevices) {
-        this.mContext = context;
-        this.mDevices = mDevices;
+    public PairedDeviceAdapter(Context context, List<BluetoothDevice> devices) {
+        super();
+        mContext = context;
+        mDevices = decorateDevices(devices);
+        mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
-    // Provide a reference to the views for each data item
-    // Complex data items may need more than one view per item, and
-    // you provide access to all the views for a data item in a view holder
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        // each data item is just a string in this case
-        View view;
-        TextView tvName;
-
-
-        public ViewHolder(View view) {
-            super(view);
-            this.view = view;
-            tvName = view.findViewById(R.id.tv_name);
+    public static List<BluetoothDeviceDecorator> decorateDevices(Collection<BluetoothDevice> btDevices) {
+        List<BluetoothDeviceDecorator> devices = new ArrayList<>();
+        for (BluetoothDevice dev : btDevices) {
+            devices.add(new BluetoothDeviceDecorator(dev, 0));
         }
+        return devices;
     }
 
+    public PairedDeviceAdapter(Context context, Set<BluetoothDevice> devices) {
+        this(context, new ArrayList<>(devices));
+    }
 
-    // Create new views (invoked by the layout manager)
     @Override
-    public PairedDeviceAdapter.ViewHolder onCreateViewHolder(ViewGroup parent,
-                                                             int viewType) {
-        View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_devices, parent, false);
-        return new ViewHolder(itemView);
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        ViewHolder vh = new ViewHolder(mInflater.inflate(R.layout.list_item_devices, parent, false));
+        return vh;
     }
 
-    // Replace the contents of a view (invoked by the layout manager)
     @Override
-    public void onBindViewHolder(final ViewHolder holder, int position) {
-        final BluetoothDevice device = mDevices.get(position);
-        holder.tvName.setText(device.getAddress() + " : " +device.getName());
-        holder.view.setBackgroundColor(Color.LTGRAY);
+    public void onBindViewHolder(ViewHolder holder, final int position) {
+        final BluetoothDeviceDecorator device = mDevices.get(position);
+
+        holder.tvName.setText(device.getAddress() + " : " + device.getName());
+
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mOnItemClickListener.onItemClick(device, position);
+            }
+        });
     }
 
-
-    // Return the size of your dataset (invoked by the layout manager)
     @Override
     public int getItemCount() {
         return mDevices.size();
     }
+
+    public List<BluetoothDeviceDecorator> getDevices() {
+        return mDevices;
+    }
+
+    public void setOnAdapterItemClickListener(OnAdapterItemClickListener onItemClickListener) {
+        mOnItemClickListener = onItemClickListener;
+    }
+
+    public interface OnAdapterItemClickListener {
+        public void onItemClick(BluetoothDeviceDecorator device, int position);
+    }
+
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+
+        private final TextView tvName;
+
+        public ViewHolder(View itemView) {
+            super(itemView);
+            tvName = (TextView) itemView.findViewById(R.id.tv_name);
+        }
+    }*/
 }

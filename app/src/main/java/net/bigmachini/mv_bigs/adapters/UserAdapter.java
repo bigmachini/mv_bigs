@@ -1,6 +1,7 @@
 package net.bigmachini.mv_bigs.adapters;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -11,9 +12,16 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.gson.Gson;
+
+import net.bigmachini.mv_bigs.Constants;
+import net.bigmachini.mv_bigs.Global;
 import net.bigmachini.mv_bigs.R;
 import net.bigmachini.mv_bigs.Utils;
+import net.bigmachini.mv_bigs.activities.DeviceIdActivity;
+import net.bigmachini.mv_bigs.activities.HomeActivity;
 import net.bigmachini.mv_bigs.models.UserModel;
 
 import java.util.List;
@@ -59,19 +67,42 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         return new ViewHolder(itemView);
     }
 
+    public void updateList(List<UserModel> users) {
+        this.mUsers = users;
+        Utils.setStringSetting(mContext, Constants.USERS, new Gson().toJson(this.mUsers).toString());
+        showDeleteButton();
+        notifyDataSetChanged();
+    }
+
+    public void addList(UserModel userModel) {
+        this.mUsers.add(userModel);
+        notifyDataSetChanged();
+    }
+
+    public List<UserModel> getUsers() {
+        return mUsers;
+    }
+
+    public void clear() {
+        mUsers.clear();
+        notifyDataSetChanged();
+    }
+
     // Replace the contents of a view (invoked by the layout manager)
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
         final UserModel user = mUsers.get(position);
         holder.tvName.setText(user.name);
         holder.view.setBackgroundColor(Color.LTGRAY);
+        if (holder.cbSelected.isChecked()) {
+            holder.cbSelected.setChecked(false);
+        }
         holder.cbSelected.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                user.setSelected(!user.isSelected());
-                holder.view.setBackgroundColor(user.isSelected() ? Color.CYAN : Color.LTGRAY);
+                user.setSelected(isChecked);
+                holder.view.setBackgroundColor(isChecked ? Color.CYAN : Color.LTGRAY);
                 showDeleteButton();
-
             }
         });
 
@@ -79,14 +110,23 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         holder.view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                Global.gSelectedUser = user;
+                mContext.startActivity(new Intent(mContext, DeviceIdActivity.class));
             }
         });
 
         holder.ivAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Utils.createUser(mContext);
+
+                if (!((HomeActivity) mContext).bluetoothSerial.isConnected()) {
+                    Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
+                } else {
+                    int key = Utils.incrementCounter(mContext, 1);
+                    Global.gSelectedKey = key;
+                    user.addKey(key);
+                    ((HomeActivity) mContext).bluetoothSerial.write(String.valueOf(key));
+                }
             }
         });
     }
@@ -98,7 +138,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         for (UserModel user : mUsers) {
             if (user.isSelected() == true) {
                 showButton = true;
-                count ++;
+                count++;
             }
         }
 
