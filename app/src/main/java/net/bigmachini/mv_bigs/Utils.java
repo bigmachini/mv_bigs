@@ -2,24 +2,57 @@ package net.bigmachini.mv_bigs;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.InputType;
 import android.text.format.DateFormat;
 import android.util.Patterns;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 
+import net.bigmachini.mv_bigs.activities.HomeActivity;
+import net.bigmachini.mv_bigs.models.UserModel;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class Utils {
+
+    public static void createUser(final Context mContext) {
+        new MaterialDialog.Builder(mContext)
+                .title("Create User")
+                .content("Enter Name")
+                .inputType(InputType.TYPE_CLASS_TEXT)
+                .input("Enter Name", "", new MaterialDialog.InputCallback() {
+                    @Override
+                    public void onInput(MaterialDialog dialog, CharSequence input) {
+                        String userName = input.toString();
+                        if (userName.isEmpty() || userName.length() < 3) {
+                            Utils.toastText(mContext, "Invalid name, should not be empty or less than 3 characters");
+
+
+                        } else {
+                            UserModel userModel = new UserModel();
+                            userModel.createUser(mContext, userName);
+                            List<UserModel> users = UserModel.getUsers(mContext);
+                            mContext.startActivity(new Intent(mContext, HomeActivity.class));
+                            ((Activity) mContext).finish();
+                        }
+                    }
+                }).positiveColorRes(R.color.colorGreen)
+                .negativeText("Close")
+                .show();
+        ;
+    }
     /**
      * Create a dialog with an icon
      * @param context
