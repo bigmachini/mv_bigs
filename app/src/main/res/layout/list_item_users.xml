@@ -34,9 +34,8 @@
         <ImageView
             android:id="@+id/iv_add"
             android:layout_width="wrap_content"
-
             android:layout_height="wrap_content"
-            android:src="@drawable/baseline_add_black_24"/>
+            android:src="@drawable/baseline_add_box_black_48"/>
 
     </LinearLayout>
 </LinearLayout>

@@ -45,6 +45,7 @@ public class Utils {
                             userModel.createUser(mContext, userName);
                             if(mContext instanceof HomeActivity)
                             {
+
                                 ((HomeActivity)mContext).mAdapter.addList(userModel);
                             }
 
@@ -79,11 +80,11 @@ public class Utils {
 
     public static int incrementCounter(Context mContext, int i) {
         int counter = Utils.getIntSetting(mContext, Constants.COUNTER, 0) + i;
-        saveCounte(mContext, counter);
+        saveCounter(mContext, counter);
         return counter;
     }
 
-    private static void saveCounte(Context mContext, int count) {
+    private static void saveCounter(Context mContext, int count) {
         Utils.setIntSetting(mContext, Constants.COUNTER, count);
     }
 

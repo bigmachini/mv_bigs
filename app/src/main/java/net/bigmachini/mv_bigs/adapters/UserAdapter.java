@@ -76,6 +76,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
 
     public void addList(UserModel userModel) {
         this.mUsers.add(userModel);
+        UserModel.saveList(mContext, mUsers);
         notifyDataSetChanged();
     }
 
@@ -125,6 +126,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
                     int key = Utils.incrementCounter(mContext, 1);
                     Global.gSelectedKey = key;
                     user.addKey(key);
+                    UserModel.saveUser(mContext, user);
                     ((HomeActivity) mContext).bluetoothSerial.write(String.valueOf(key));
                 }
             }

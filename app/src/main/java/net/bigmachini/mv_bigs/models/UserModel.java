@@ -63,6 +63,14 @@ public class UserModel {
         Utils.setStringSetting(mContext, Constants.USERS, new Gson().toJson(users).toString());
     }
 
+    public static void saveUser(Context mContext, UserModel userModel)
+    {
+        List<UserModel> users = getUsers(mContext);
+        int indexOf = users.indexOf(userModel);
+        users.set(indexOf, userModel);
+        saveList(mContext, users);
+    }
+
 
     @Override
     public boolean equals(Object obj) {

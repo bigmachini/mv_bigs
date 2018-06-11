@@ -62,7 +62,7 @@ public class DeviceIdActivity extends AppCompatActivity
                     Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
                 } else {
                     int key = Utils.incrementCounter(mContext, 1);
-                    userModel.addKey(key);
+                    userModel.addKey(key);                    UserModel.saveUser(mContext, userModel);
                     Global.gSelectedKey = key;
                     bluetoothSerial.write(String.valueOf(key));
                 }

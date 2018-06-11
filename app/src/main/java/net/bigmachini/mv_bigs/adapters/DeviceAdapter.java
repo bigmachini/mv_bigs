@@ -70,6 +70,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
                 } else {
                     int key = Utils.incrementCounter(mContext, 1);
                     userModel.addKey(key);
+                    UserModel.saveUser(mContext, userModel);
                     ((DeviceIdActivity) mContext).bluetoothSerial.write(String.valueOf(key));
                 }
             }
@@ -82,8 +83,9 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
                 userModel.ids = mDevices;
                 List<UserModel> userModels = UserModel.getUsers(mContext);
                 int indexOf = userModels.indexOf(userModel);
-                userModels.add(indexOf, userModel);
+                userModels.set(indexOf, userModel);
                 UserModel.saveList(mContext, userModels);
+                notifyDataSetChanged();
             }
         });
     }
