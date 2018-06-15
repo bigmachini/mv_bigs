@@ -21,9 +21,11 @@ public class UserModel {
     public void createUser(Context mContext, String name) {
         this.uuid = UUID.randomUUID().toString();
         this.name = name;
-        List<UserModel> users = getUsers(mContext);
-        users.add(this);
-        Utils.setStringSetting(mContext, Constants.USERS, new Gson().toJson(users));
+        if (this.name != null) {
+            List<UserModel> users = getUsers(mContext);
+            users.add(this);
+            saveList(mContext, users);
+        }
     }
 
     public void addKey(int key) {
@@ -63,9 +65,8 @@ public class UserModel {
         Utils.setStringSetting(mContext, Constants.USERS, new Gson().toJson(users).toString());
     }
 
-    public static void saveUser(Context mContext, UserModel userModel)
-    {
-        if(userModel != null) {
+    public static void saveUser(Context mContext, UserModel userModel) {
+        if (userModel != null && userModel.name != null) {
             List<UserModel> users = getUsers(mContext);
             int indexOf = users.indexOf(userModel);
             users.set(indexOf, userModel);

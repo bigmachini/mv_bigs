@@ -26,6 +26,7 @@ import com.macroyau.blue2serial.BluetoothDeviceListDialog;
 import com.macroyau.blue2serial.BluetoothSerial;
 import com.macroyau.blue2serial.BluetoothSerialListener;
 
+import net.bigmachini.mv_bigs.BluetoothInstance;
 import net.bigmachini.mv_bigs.Constants;
 import net.bigmachini.mv_bigs.Global;
 import net.bigmachini.mv_bigs.R;
@@ -117,7 +118,7 @@ public class HomeActivity extends AppCompatActivity
         mAdapter = new UserAdapter(mContext, users, btnDelete);
         mRecyclerView.setAdapter(mAdapter);
         // Create a new instance of BluetoothSerial
-        bluetoothSerial = new BluetoothSerial(this, this);
+        bluetoothSerial = BluetoothInstance.getInstance(this, this);
     }
 
     @Override
@@ -153,9 +154,14 @@ public class HomeActivity extends AppCompatActivity
     @Override
     protected void onStop() {
         super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
 
         // Disconnect from the remote device and close the serial port
-        bluetoothSerial.stop();
+   //     bluetoothSerial.stop();
     }
 
     @Override

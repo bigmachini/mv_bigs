@@ -9,12 +9,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.google.gson.Gson;
 
 import net.bigmachini.mv_bigs.Constants;
 import net.bigmachini.mv_bigs.Global;
@@ -47,6 +45,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         TextView tvName;
         CheckBox cbSelected;
         ImageView ivAdd;
+        LinearLayout ll_checkbox;
 
 
         public ViewHolder(View view) {
@@ -55,7 +54,10 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
             tvName = view.findViewById(R.id.tv_name);
             cbSelected = view.findViewById(R.id.cb_selected);
             ivAdd = view.findViewById(R.id.iv_add);
+            ll_checkbox = view.findViewById(R.id.ll_checkbox);
         }
+
+        ;
     }
 
 
@@ -69,15 +71,23 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
 
     public void updateList(List<UserModel> users) {
         this.mUsers = users;
-        Utils.setStringSetting(mContext, Constants.USERS, new Gson().toJson(this.mUsers).toString());
+        UserModel.saveList(mContext, this.mUsers);
+        showDeleteButton();
+        notifyDataSetChanged();
+    }
+
+    public void updateList() {
+        this.mUsers = UserModel.getUsers(mContext);
         showDeleteButton();
         notifyDataSetChanged();
     }
 
     public void addList(UserModel userModel) {
-        this.mUsers.add(userModel);
-        UserModel.saveList(mContext, mUsers);
-        notifyDataSetChanged();
+        if (userModel != null && userModel.name != null) {
+            this.mUsers.add(userModel);
+            UserModel.saveList(mContext, mUsers);
+            notifyDataSetChanged();
+        }
     }
 
     public List<UserModel> getUsers() {
@@ -98,6 +108,22 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         if (holder.cbSelected.isChecked()) {
             holder.cbSelected.setChecked(false);
         }
+
+        holder.ll_checkbox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                user.setSelected(!holder.cbSelected.isChecked());
+                holder.cbSelected.setChecked(!holder.cbSelected.isChecked());
+                holder.view.setBackgroundColor(user.isSelected() ? Color.CYAN : Color.LTGRAY);
+                if (user.ids.size() > 0) {
+                    Utils.toastText(mContext, "Please delete all ids for user: " + user.name);
+                }else {
+                    showDeleteButton();
+                }
+            }
+        });
+  /*
         holder.cbSelected.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -106,7 +132,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
                 showDeleteButton();
             }
         });
-
+*/
         holder.view.setBackgroundColor(user.isSelected() ? Color.CYAN : Color.LTGRAY);
         holder.view.setOnClickListener(new View.OnClickListener() {
             @Override

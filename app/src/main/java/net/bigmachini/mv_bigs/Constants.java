@@ -9,6 +9,5 @@ public class Constants {
 
     public static final String ENROLL = "enroll";
     public static final String DELETE = "delete";
-    public static final String DELETE_ALL = "all";
-
+    public static final String DELETE_ALL = "off";
 }

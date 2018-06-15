@@ -44,8 +44,10 @@ public class Utils {
                             userModel.addKey(key);
                             if (mContext instanceof HomeActivity) {
                                 Utils.sendMessage( ((HomeActivity) mContext).bluetoothSerial, Constants.ENROLL, key);
-                                ((HomeActivity) mContext).mAdapter.addList(userModel);
                                 userModel.createUser(mContext, userName);
+
+                                ((HomeActivity) mContext).mAdapter.updateList();
+
                             }
 
                             message = "User: " + userModel.name + " has been created";
