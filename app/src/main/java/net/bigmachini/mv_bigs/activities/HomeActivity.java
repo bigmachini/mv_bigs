@@ -13,7 +13,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,7 +25,6 @@ import com.macroyau.blue2serial.BluetoothDeviceListDialog;
 import com.macroyau.blue2serial.BluetoothSerial;
 import com.macroyau.blue2serial.BluetoothSerialListener;
 
-import net.bigmachini.mv_bigs.BluetoothInstance;
 import net.bigmachini.mv_bigs.Constants;
 import net.bigmachini.mv_bigs.Global;
 import net.bigmachini.mv_bigs.R;
@@ -102,12 +100,21 @@ public class HomeActivity extends AppCompatActivity
                     Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
                 } else {
                     List<UserModel> dUsers = new ArrayList<>(mAdapter.getUsers());
+                    StringBuilder sb = new StringBuilder();
                     for (int i = dUsers.size() - 1; i >= 0; i--) {
                         if (dUsers.get(i).isSelected()) {
-                            Log.e(TAG, "Username : " + dUsers.get(i).name);
-                            dUsers.remove(i);
+                            UserModel user = dUsers.get(i);
+                            if (user.ids.size() > 0) {
+                                sb.append(user.name + "\n");
+                            } else {
+                                dUsers.remove(i);
+                            }
                         }
                     }
+                    if (sb.toString().isEmpty() || sb.toString().length() != 0) {
+                        Utils.toastText(mContext, "Please delete all ids for user(s):\n" + sb.toString());
+                    }
+
                     mAdapter.clear();
                     mAdapter.updateList(dUsers);
                 }
@@ -118,7 +125,7 @@ public class HomeActivity extends AppCompatActivity
         mAdapter = new UserAdapter(mContext, users, btnDelete);
         mRecyclerView.setAdapter(mAdapter);
         // Create a new instance of BluetoothSerial
-        bluetoothSerial = BluetoothInstance.getInstance(this, this);
+        bluetoothSerial = new BluetoothSerial(this, this);
     }
 
     @Override
@@ -161,7 +168,7 @@ public class HomeActivity extends AppCompatActivity
         super.onDestroy();
 
         // Disconnect from the remote device and close the serial port
-   //     bluetoothSerial.stop();
+        //     bluetoothSerial.stop();
     }
 
     @Override

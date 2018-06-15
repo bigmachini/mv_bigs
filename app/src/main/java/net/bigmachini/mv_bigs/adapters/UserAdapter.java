@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -104,35 +105,26 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     public void onBindViewHolder(final ViewHolder holder, int position) {
         final UserModel user = mUsers.get(position);
         holder.tvName.setText(user.name);
+        holder.cbSelected.setChecked(user.isSelected());
         holder.view.setBackgroundColor(Color.LTGRAY);
-        if (holder.cbSelected.isChecked()) {
-            holder.cbSelected.setChecked(false);
-        }
 
         holder.ll_checkbox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                user.setSelected(!holder.cbSelected.isChecked());
                 holder.cbSelected.setChecked(!holder.cbSelected.isChecked());
-                holder.view.setBackgroundColor(user.isSelected() ? Color.CYAN : Color.LTGRAY);
-                if (user.ids.size() > 0) {
-                    Utils.toastText(mContext, "Please delete all ids for user: " + user.name);
-                }else {
-                    showDeleteButton();
-                }
             }
         });
-  /*
+
         holder.cbSelected.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 user.setSelected(isChecked);
-                holder.view.setBackgroundColor(isChecked ? Color.CYAN : Color.LTGRAY);
+                holder.view.setBackgroundColor(user.isSelected() ? Color.CYAN : Color.LTGRAY);
+                UserModel.saveUser(mContext, user);
                 showDeleteButton();
             }
         });
-*/
+
         holder.view.setBackgroundColor(user.isSelected() ? Color.CYAN : Color.LTGRAY);
         holder.view.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -157,6 +149,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
             }
         });
     }
+
 
     private void showDeleteButton() {
         boolean showButton = false;

@@ -23,7 +23,6 @@ import com.macroyau.blue2serial.BluetoothDeviceListDialog;
 import com.macroyau.blue2serial.BluetoothSerial;
 import com.macroyau.blue2serial.BluetoothSerialListener;
 
-import net.bigmachini.mv_bigs.BluetoothInstance;
 import net.bigmachini.mv_bigs.Constants;
 import net.bigmachini.mv_bigs.Global;
 import net.bigmachini.mv_bigs.R;
@@ -92,7 +91,7 @@ public class DeviceIdActivity extends AppCompatActivity
         mAdapter = new DeviceAdapter(mContext, deviceIds, userModel);
         mRecyclerView.setAdapter(mAdapter);
         // Create a new instance of BluetoothSerial
-        bluetoothSerial = BluetoothInstance.getInstance(this, this);
+        bluetoothSerial = new BluetoothSerial(this, this);
     }
 
     @Override
