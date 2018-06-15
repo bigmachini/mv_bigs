@@ -25,4 +25,5 @@
 
     <string name="terminal_message_template">%1$s > %2$s\n</string>
     <string name="title_activity_device_id">DeviceIdActivity</string>
+    <string name="action_delete_all">Delete All</string>
 </resources>

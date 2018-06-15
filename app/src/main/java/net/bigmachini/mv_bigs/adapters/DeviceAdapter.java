@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import net.bigmachini.mv_bigs.Global;
 import net.bigmachini.mv_bigs.R;
 import net.bigmachini.mv_bigs.activities.DeviceIdActivity;
 import net.bigmachini.mv_bigs.models.UserModel;
@@ -68,11 +69,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
                 } else {
                     mDevices.remove(position);
                     userModel.ids = mDevices;
-                    List<UserModel> userModels = UserModel.getUsers(mContext);
-                    int indexOf = userModels.indexOf(userModel);
-                    userModels.set(indexOf, userModel);
-                    UserModel.saveList(mContext, userModels);
-                    notifyDataSetChanged();
+                    Global.gSelectedUser = userModel;
                 }
             }
         });

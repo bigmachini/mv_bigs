@@ -16,5 +16,9 @@
         android:checkable="true"
         android:checked="false"
         app:showAsAction="never" />
+    <item android:id="@+id/action_delete_all"
+        android:title="@string/action_delete_all"
+        android:checked="false"
+        app:showAsAction="never" />
 
 </menu>

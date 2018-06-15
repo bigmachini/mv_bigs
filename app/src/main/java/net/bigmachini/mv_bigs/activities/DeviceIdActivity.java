@@ -265,11 +265,18 @@ public class DeviceIdActivity extends AppCompatActivity
 
     @Override
     public void onBluetoothSerialRead(String message) {
-//        // Print the incoming message on the terminal screen
-//        tvTerminal.append(getString(R.string.terminal_message_template,
-//                bluetoothSerial.getConnectedDeviceName(),
-//                message));
-//        svTerminal.post(scrollTerminalToBottom);
+        switch (Global.gSelectedAction) {
+            case Constants.DELETE:
+                if (Global.gSelectedUser != null && Global.gSelectedKey != 0) {
+                    List<UserModel> userModels = UserModel.getUsers(mContext);
+                    int indexOf = userModels.indexOf(userModel);
+                    userModels.set(indexOf, userModel);
+                    UserModel.saveList(mContext, userModels);
+                    mAdapter.notifyDataSetChanged();
+                    Global.gSelectedKey = 0;
+                }
+                break;
+        }
     }
 
     @Override

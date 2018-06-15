@@ -142,9 +142,8 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
                 } else {
                     int key = Utils.incrementCounter(mContext, 1);
                     Global.gSelectedKey = key;
-                    user.addKey(key);
+                    Global.gSelectedUser = user;
                     Utils.sendMessage(((HomeActivity) mContext).bluetoothSerial, Constants.ENROLL, key);
-                    UserModel.saveUser(mContext, user);
                 }
             }
         });

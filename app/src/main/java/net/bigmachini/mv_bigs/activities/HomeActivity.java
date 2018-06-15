@@ -166,7 +166,8 @@ public class HomeActivity extends AppCompatActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
+        Global.gSelectedUser = null;
+        Global.gSelectedKey = 0;
         // Disconnect from the remote device and close the serial port
         //     bluetoothSerial.stop();
     }
@@ -200,9 +201,20 @@ public class HomeActivity extends AppCompatActivity
             crlf = !item.isChecked();
             item.setChecked(crlf);
             return true;
+        } else if (id == R.id.action_delete_all) {
+            deleteAll();
+            return true;
         }
-
         return super.onOptionsItemSelected(item);
+    }
+
+    private void deleteAll() {
+        checkBluetooth();
+        if (!bluetoothSerial.isConnected()) {
+            Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
+        } else {
+            bluetoothSerial.write(Constants.DELETE_ALL);
+        }
     }
 
     @Override
@@ -325,16 +337,20 @@ public class HomeActivity extends AppCompatActivity
         switch (Global.gSelectedAction) {
             case Constants.ENROLL:
             case Constants.DELETE:
-                if (Global.gSelectedKey == Integer.parseInt(message)) {
+                if (Global.gSelectedUser != null && Global.gSelectedKey != 0) {
+                    Global.gSelectedUser.addKey(Global.gSelectedKey);
                     UserModel.saveUser(mContext, Global.gSelectedUser);
                     Global.gSelectedUser = null;
+                    Global.gSelectedKey = 0;
                 }
                 break;
 
             case Constants.DELETE_ALL:
                 if (new String(Constants.DELETE_ALL).equals(new String(message))) {
-                    UserModel.saveUser(mContext, Global.gSelectedUser);
+                    mAdapter.updateList(new ArrayList<UserModel>());
                     Global.gSelectedUser = null;
+                    Global.gSelectedKey = 0;
+                    Global.gSelectedAction = null;
                 }
                 break;
         }
