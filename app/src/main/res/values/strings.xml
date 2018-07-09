@@ -43,4 +43,8 @@
     <string name="reset_pin">Reset Pin</string>
     <string name="are_you_sure">Are you sure?</string>
     <string name="some_went_wrong">Something went wrong try again.</string>
+    <string name="title_activity_check_phone">Check Phone Number</string>
+    <string name="enter_phone">Enter Phone Number</string>
+    <string name="check_phone">Check Account</string>
+    <string name="invalid_phone_number">Invalid Phone Number</string>
 </resources>

@@ -26,6 +26,11 @@ public interface MyAPI {
     @POST("forgot_pin")
     Call<APIResponse<Boolean>> forgotPin(@FieldMap HashMap<String, Object> params);
 
+
+    @FormUrlEncoded
+    @POST("check_account")
+    Call<APIResponse<Boolean>> checkAccount(@FieldMap HashMap<String, Object> params);
+
     @FormUrlEncoded
     @POST("/create_user")
     Call<APIResponse<BaseStructure>> createUser(@FieldMap HashMap<String, Object> params);

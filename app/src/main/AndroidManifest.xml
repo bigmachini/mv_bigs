@@ -66,6 +66,10 @@
         <activity
             android:name=".activities.DeviceActivity"
             android:label="@string/title_activity_device"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".activities.CheckPhoneActivity"
+            android:label="@string/title_activity_check_phone"
             android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 

@@ -32,7 +32,7 @@ public class SplashScreen extends AppCompatActivity {
                 RegistrationModel registrationModel = new Gson().fromJson(Utils.getStringSetting(mContext, Constants.REGISTRATION_MODEL, ""), RegistrationModel.class);
 
                 if (registrationModel == null) {
-                    startActivity(new Intent(SplashScreen.this, RegistrationActivity.class));
+                    startActivity(new Intent(SplashScreen.this, CheckPhoneActivity.class));
                 } else {
                     startActivity(new Intent(SplashScreen.this, LoginActivity.class));
                 }

@@ -47,7 +47,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
+        mContext = LoginActivity.this;
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -58,12 +58,9 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         fab.setVisibility(View.GONE);
-
         btnLogin = findViewById(R.id.btn_login);
         tvForgotPassword = findViewById(R.id.tv_forgot_pin);
         final RegistrationModel registrationModel = new Gson().fromJson(Utils.getStringSetting(mContext, Constants.REGISTRATION_MODEL, ""), RegistrationModel.class);
-
-
         tvForgotPassword.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -84,7 +81,7 @@ public class LoginActivity extends AppCompatActivity {
 
 
         etPin = findViewById(R.id.et_pin);
-        mContext = LoginActivity.this;
+
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -105,7 +102,7 @@ public class LoginActivity extends AppCompatActivity {
 
 
     public void performLogin(Context context, RegistrationModel registrationModel, String pin) {
-        if (Utils.CheckConnection(context)) {
+        if (Utils.CheckConnection(context) && !Utils.getStringSetting(mContext, Constants.PHONE_NUMBER,"").isEmpty()) {
             HashMap<String, Object> params = new HashMap<>();
             params.put("phone_number", registrationModel.phoneNumber);
             params.put("pin", pin);
