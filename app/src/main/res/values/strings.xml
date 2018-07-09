@@ -38,7 +38,7 @@
     <string name="journal_status">Device Status</string>
     <string name="device_status">Device Status</string>
     <string name="device_mac_address">Mac Address</string>
-    <string name="title_activity_device">DeviceActivity</string>
+    <string name="title_activity_device">Linked Devices</string>
     <string name="no_device_found">No Devices Found</string>
     <string name="reset_pin">Reset Pin</string>
     <string name="are_you_sure">Are you sure?</string>
@@ -47,4 +47,11 @@
     <string name="enter_phone">Enter Phone Number</string>
     <string name="check_phone">Check Account</string>
     <string name="invalid_phone_number">Invalid Phone Number</string>
+    <string name="attach_device">Link Device</string>
+    <string name="enter_mac_address">Enter Mac Address</string>
+    <string name="empty">CC:9F:7A:45:26:38</string>
+    <string name="assing_mac_address">Assigning Mac Address</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="action_select_device">Device List</string>
 </resources>

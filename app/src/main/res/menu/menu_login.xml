@@ -11,6 +11,10 @@
         android:visible="false"
         app:showAsAction="always" />
 
+    <item android:id="@+id/action_select_device"
+        android:title="@string/action_select_device"
+        app:showAsAction="never" />
+
     <item android:id="@+id/action_crlf"
         android:title="@string/action_crlf"
         android:checkable="true"

@@ -4,9 +4,9 @@ import com.google.gson.annotations.SerializedName;
 
 public class DeviceStructure extends BaseStructure{
 
-    @SerializedName("mac_addresss")
+    @SerializedName("mac_address")
     public String macAddress;
 
     @SerializedName("status")
-    public boolean status;
+    public String status;
 }

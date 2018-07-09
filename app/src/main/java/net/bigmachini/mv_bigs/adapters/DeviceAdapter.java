@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import net.bigmachini.mv_bigs.Constants;
+import net.bigmachini.mv_bigs.Global;
 import net.bigmachini.mv_bigs.R;
 import net.bigmachini.mv_bigs.activities.HomeActivity;
 import net.bigmachini.mv_bigs.db.controllers.DeviceController;
@@ -63,7 +63,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
         holder.linearLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Constants.gSelectedDevice = device;
+                Global.gSelectedDevice = device;
                 mContext.startActivity(new Intent(mContext, HomeActivity.class));
             }
         });

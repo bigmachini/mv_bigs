@@ -4,6 +4,7 @@ import net.bigmachini.mv_bigs.structures.BaseStructure;
 import net.bigmachini.mv_bigs.structures.DeviceStructure;
 import net.bigmachini.mv_bigs.structures.LoginStructure;
 import net.bigmachini.mv_bigs.structures.RecordStructure;
+import net.bigmachini.mv_bigs.structures.ResetPinStructure;
 import net.bigmachini.mv_bigs.structures.UserStructure;
 
 import java.util.HashMap;
@@ -24,8 +25,11 @@ public interface MyAPI {
 
     @FormUrlEncoded
     @POST("forgot_pin")
-    Call<APIResponse<Boolean>> forgotPin(@FieldMap HashMap<String, Object> params);
+    Call<APIResponse<ResetPinStructure>> forgotPin(@FieldMap HashMap<String, Object> params);
 
+    @FormUrlEncoded
+    @POST("assign_device")
+    Call<APIListResponse<DeviceStructure>> assignDevice(@FieldMap HashMap<String, Object> params);
 
     @FormUrlEncoded
     @POST("check_account")
@@ -46,4 +50,6 @@ public interface MyAPI {
     @FormUrlEncoded
     @POST("/get_device_user_records")
     Call<APIResponse<RecordStructure>> getUserRecords(@FieldMap HashMap<String, Object> params);
+
+
 }

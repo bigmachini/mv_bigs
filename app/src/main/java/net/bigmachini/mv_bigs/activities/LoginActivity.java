@@ -19,6 +19,7 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.gson.Gson;
 
 import net.bigmachini.mv_bigs.Constants;
+import net.bigmachini.mv_bigs.Global;
 import net.bigmachini.mv_bigs.R;
 import net.bigmachini.mv_bigs.Utils;
 import net.bigmachini.mv_bigs.models.RegistrationModel;
@@ -26,6 +27,7 @@ import net.bigmachini.mv_bigs.services.APIResponse;
 import net.bigmachini.mv_bigs.services.APIService;
 import net.bigmachini.mv_bigs.services.MyAPI;
 import net.bigmachini.mv_bigs.structures.LoginStructure;
+import net.bigmachini.mv_bigs.structures.ResetPinStructure;
 
 import java.util.HashMap;
 
@@ -67,11 +69,13 @@ public class LoginActivity extends AppCompatActivity {
                 new MaterialDialog.Builder(mContext)
                         .title(R.string.reset_pin)
                         .content(R.string.are_you_sure)
-                        .progress(true, 0)
+                        .cancelable(true)
+                        .positiveText(getString(R.string.yes))
+                        .negativeText(getString(R.string.no))
                         .onPositive(new MaterialDialog.SingleButtonCallback() {
                             @Override
                             public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                                resetPin(mContext, registrationModel);
+                                resetPin(mContext);
                             }
                         })
                         .show();
@@ -102,9 +106,9 @@ public class LoginActivity extends AppCompatActivity {
 
 
     public void performLogin(Context context, RegistrationModel registrationModel, String pin) {
-        if (Utils.CheckConnection(context) && !Utils.getStringSetting(mContext, Constants.PHONE_NUMBER,"").isEmpty()) {
+        if (Utils.CheckConnection(context)) {
             HashMap<String, Object> params = new HashMap<>();
-            params.put("phone_number", Utils.getStringSetting(mContext, Constants.PHONE_NUMBER,""));
+            params.put("phone_number", Utils.getStringSetting(mContext, Constants.PHONE_NUMBER, ""));
             params.put("pin", pin);
             MyAPI myAPI = APIService.createService(MyAPI.class, 60);
             Call<APIResponse<LoginStructure>> call = myAPI.loginUser(params);
@@ -115,7 +119,8 @@ public class LoginActivity extends AppCompatActivity {
                     try {
                         if (response.code() >= 200 && response.code() < 300) {
                             if (response.body().nStatus < 10) {
-                                Constants.gLoginStructure = response.body().data;
+                                Global.gLoginStructure = response.body().data;
+                                Utils.getStringSetting(mContext, Constants.REGISTRATION_MODEL, new Gson().toJson(response.body().data));
                                 startActivity(new Intent(LoginActivity.this, DeviceActivity.class));
                                 finish();
                             } else {
@@ -147,33 +152,41 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    public void resetPin(Context context, RegistrationModel registrationModel) {
+    public void resetPin(Context context) {
         if (Utils.CheckConnection(context)) {
             HashMap<String, Object> params = new HashMap<>();
-            params.put("phone_number", registrationModel.phoneNumber);
+            params.put("phone_number", Utils.getStringSetting(mContext, Constants.PHONE_NUMBER, ""));
             MyAPI myAPI = APIService.createService(MyAPI.class, 60);
-            Call<APIResponse<Boolean>> call = myAPI.forgotPin(params);
-            call.enqueue(new Callback<APIResponse<Boolean>>() {
+            Call<APIResponse<ResetPinStructure>> call = myAPI.forgotPin(params);
+            call.enqueue(new Callback<APIResponse<ResetPinStructure>>() {
                 @Override
-                public void onResponse(Call<APIResponse<Boolean>> call, Response<APIResponse<Boolean>> response) {
-                    mDialog.dismiss();
+                public void onResponse(Call<APIResponse<ResetPinStructure>> call, Response<APIResponse<ResetPinStructure>> response) {
+                    if (mDialog != null && mDialog.isShowing())
+                        mDialog.dismiss();
                     try {
                         if (response.code() >= 200 && response.code() < 300) {
                             if (response.body().nStatus < 10) {
+                                ResetPinStructure data = response.body().data;
+                                RegistrationModel registrationModel = new Gson().fromJson(Utils.getStringSetting(mContext, Constants.REGISTRATION_MODEL, ""), RegistrationModel.class);
 
+                                if (registrationModel == null)
+                                    registrationModel = new RegistrationModel();
+                                registrationModel.pin = data.pin;
+                                registrationModel.phoneNumber = Utils.getStringSetting(mContext, Constants.PHONE_NUMBER, "");
+                                Utils.setStringSetting(mContext, Constants.REGISTRATION_MODEL, new Gson().toJson(registrationModel));
                             }
                         } else {
-                            mDialog.dismiss();
                             Toast.makeText(mContext, getString(R.string.some_went_wrong), Toast.LENGTH_LONG).show();
                         }
                     } catch (Exception e) {
-                        mDialog.dismiss();
+                        e.printStackTrace();
                     }
                 }
 
                 @Override
-                public void onFailure(Call<APIResponse<Boolean>> call, Throwable t) {
-                    mDialog.dismiss();
+                public void onFailure(Call<APIResponse<ResetPinStructure>> call, Throwable t) {
+                    if (mDialog != null && mDialog.isShowing())
+                        mDialog.dismiss();
                 }
             });
         } else {

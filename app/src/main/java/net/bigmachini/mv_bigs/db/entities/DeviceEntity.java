@@ -24,7 +24,7 @@ public class DeviceEntity {
 
     @ColumnInfo(name = "status")
     @Expose
-    private Boolean status;
+    private String status;
 
 
     @NonNull
@@ -44,11 +44,11 @@ public class DeviceEntity {
         this.macAddress = macAddress;
     }
 
-    public Boolean getStatus() {
+    public String getStatus() {
         return status;
     }
 
-    public void setStatus(Boolean status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 
@@ -68,7 +68,7 @@ public class DeviceEntity {
 
         private final int id;
         private final String macAddress;
-        private final Boolean status;
+        private final String status;
 
         public DeviceBuilder(DeviceStructure deviceStructure) {
             this.id = deviceStructure.id;

@@ -94,10 +94,11 @@ public class CheckPhoneActivity extends AppCompatActivity {
 
                 @Override
                 public void onFailure(Call<APIResponse<Boolean>> call, Throwable t) {
+                    Toast.makeText(mContext, "Something went wrong, check your internet connection and try again", Toast.LENGTH_SHORT).show();
                 }
             });
         } else {
-            Toast.makeText(context, "Please connect your data first", Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, "Please connect your data first", Toast.LENGTH_SHORT).show();
         }
     }
 
