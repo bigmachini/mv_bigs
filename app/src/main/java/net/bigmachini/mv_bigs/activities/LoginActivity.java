@@ -104,7 +104,7 @@ public class LoginActivity extends AppCompatActivity {
     public void performLogin(Context context, RegistrationModel registrationModel, String pin) {
         if (Utils.CheckConnection(context) && !Utils.getStringSetting(mContext, Constants.PHONE_NUMBER,"").isEmpty()) {
             HashMap<String, Object> params = new HashMap<>();
-            params.put("phone_number", registrationModel.phoneNumber);
+            params.put("phone_number", Utils.getStringSetting(mContext, Constants.PHONE_NUMBER,""));
             params.put("pin", pin);
             MyAPI myAPI = APIService.createService(MyAPI.class, 60);
             Call<APIResponse<LoginStructure>> call = myAPI.loginUser(params);

@@ -63,6 +63,7 @@ public class RegistrationActivity extends AppCompatActivity {
         mContext = RegistrationActivity.this;
 
         etPhoneNumber.setText(Utils.getStringSetting(mContext, Constants.PHONE_NUMBER, ""));
+        Utils.setStringSetting(mContext, Constants.PHONE_NUMBER, "");
         etPhoneNumber.setEnabled(false);
         btnRegister.setOnClickListener(new View.OnClickListener() {
             @Override
