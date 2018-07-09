@@ -1,12 +1,14 @@
 package net.bigmachini.mv_bigs.activities;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -27,17 +29,19 @@ import net.bigmachini.mv_bigs.Constants;
 import net.bigmachini.mv_bigs.Global;
 import net.bigmachini.mv_bigs.R;
 import net.bigmachini.mv_bigs.Utils;
-import net.bigmachini.mv_bigs.adapters.DeviceAdapter;
+import net.bigmachini.mv_bigs.adapters.DeviceIdAdapter;
 import net.bigmachini.mv_bigs.models.UserModel;
 
 import java.util.List;
+
+import cn.pedant.SweetAlert.SweetAlertDialog;
 
 public class DeviceIdActivity extends AppCompatActivity
         implements BluetoothSerialListener, BluetoothDeviceListDialog.OnDeviceSelectedListener {
 
     private static final String TAG = DeviceIdActivity.class.getSimpleName();
     public RecyclerView mRecyclerView;
-    public DeviceAdapter mAdapter;
+    public DeviceIdAdapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
     private Context mContext;
     private Button btnDelete;
@@ -47,6 +51,7 @@ public class DeviceIdActivity extends AppCompatActivity
     private MenuItem actionConnect, actionDisconnect;
     public BluetoothSerial bluetoothSerial;
     UserModel userModel;
+    private ProgressDialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,11 +92,14 @@ public class DeviceIdActivity extends AppCompatActivity
         mRecyclerView.setLayoutManager(mLayoutManager);
         deviceIds = userModel.ids;
 
+        progressDialog = new ProgressDialog(this);
         // specify an adapter (see also next example)
-        mAdapter = new DeviceAdapter(mContext, deviceIds, userModel);
+        mAdapter = new DeviceIdAdapter(mContext, deviceIds, userModel, progressDialog);
         mRecyclerView.setAdapter(mAdapter);
         // Create a new instance of BluetoothSerial
         bluetoothSerial = new BluetoothSerial(this, this);
+
+
     }
 
     @Override
@@ -107,20 +115,38 @@ public class DeviceIdActivity extends AppCompatActivity
         checkBluetooth();
     }
 
+
     public void checkBluetooth() {
         if (bluetoothSerial.checkBluetooth() && bluetoothSerial.isBluetoothEnabled()) {
             if (!bluetoothSerial.isConnected()) {
                 bluetoothSerial.start();
+                if (Global.gDevice != null) {
+                    bluetoothSerial.connect(Global.gDevice);
+                    connectDevice();
+
+                }
             }
         }
     }
 
+    public void connectDevice() {
+        final Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                bluetoothSerial.connect(Global.gDevice);
+                invalidateOptionsMenu();
+                updateBluetoothState();
+            }
+        }, 1000);
+    }
+
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    protected void onStop() {
+        super.onStop();
 
         // Disconnect from the remote device and close the serial port
-        //bluetoothSerial.stop();
+        bluetoothSerial.stop();
     }
 
     @Override
@@ -144,6 +170,7 @@ public class DeviceIdActivity extends AppCompatActivity
             return true;
         } else if (id == R.id.action_disconnect) {
             bluetoothSerial.stop();
+            Global.gAddress = null;
             return true;
         } else if (id == R.id.action_crlf) {
             crlf = !item.isChecked();
@@ -206,6 +233,7 @@ public class DeviceIdActivity extends AppCompatActivity
                 break;
             default:
                 subtitle = getString(R.string.status_disconnected);
+
                 break;
         }
 
@@ -242,6 +270,10 @@ public class DeviceIdActivity extends AppCompatActivity
 
     @Override
     public void onBluetoothDisabled() {
+
+    }
+
+    public void enableBluetooth() {
         Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
         startActivityForResult(enableBluetooth, REQUEST_ENABLE_BLUETOOTH);
     }
@@ -261,22 +293,33 @@ public class DeviceIdActivity extends AppCompatActivity
     public void onBluetoothDeviceConnected(String name, String address) {
         invalidateOptionsMenu();
         updateBluetoothState();
+
     }
 
     @Override
     public void onBluetoothSerialRead(String message) {
+        if (progressDialog.isShowing())
+            progressDialog.dismiss();
+
+
         switch (Global.gSelectedAction) {
             case Constants.DELETE:
-                if (Global.gSelectedUser != null && Global.gSelectedKey != 0) {
+                if (Global.gSelectedUser != null) {
                     List<UserModel> userModels = UserModel.getUsers(mContext);
                     int indexOf = userModels.indexOf(userModel);
                     userModels.set(indexOf, userModel);
                     UserModel.saveList(mContext, userModels);
                     mAdapter.notifyDataSetChanged();
+                    new SweetAlertDialog(this, SweetAlertDialog.SUCCESS_TYPE)
+                            .setTitleText("SUCCESS!")
+                            .setContentText("ID: " + Global.gSelectedKey + " Deleted Successfully")
+                            .show();
                     Global.gSelectedKey = 0;
+                    Global.gSelectedAction = "";
                 }
                 break;
         }
+
     }
 
     @Override
@@ -293,6 +336,7 @@ public class DeviceIdActivity extends AppCompatActivity
     @Override
     public void onBluetoothDeviceSelected(BluetoothDevice device) {
         // Connect to the selected remote Bluetooth device
+        Global.gDevice = device;
         bluetoothSerial.connect(device);
     }
 

@@ -26,4 +26,21 @@
     <string name="terminal_message_template">%1$s > %2$s\n</string>
     <string name="title_activity_device_id">DeviceIdActivity</string>
     <string name="action_delete_all">Delete All</string>
+    <string name="title_activity_home2">Home2Activity</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="login">Loggin In</string>
+    <string name="please_wait">Please Wait ...</string>
+    <string name="invalid_credentials">Invalid Credentials</string>
+    <string name="registering_user">Registering User</string>
+    <string name="title_activity_devices">Devices</string>
+    <string name="journal_status">Device Status</string>
+    <string name="device_status">Device Status</string>
+    <string name="device_mac_address">Mac Address</string>
+    <string name="title_activity_device">DeviceActivity</string>
+    <string name="no_device_found">No Devices Found</string>
+    <string name="reset_pin">Reset Pin</string>
+    <string name="are_you_sure">Are you sure?</string>
+    <string name="some_went_wrong">Something went wrong try again.</string>
 </resources>

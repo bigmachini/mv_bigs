@@ -1,5 +1,6 @@
 package net.bigmachini.mv_bigs.adapters;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -28,12 +29,14 @@ import java.util.List;
 public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     private final Context mContext;
     private List<UserModel> mUsers;
+    ProgressDialog progressDialog;
     Button btnDelete;
 
-    public UserAdapter(Context context, List<UserModel> mUsers, Button btnDelete) {
+    public UserAdapter(Context context, List<UserModel> mUsers, Button btnDelete, ProgressDialog progressDialog) {
         this.mContext = context;
         this.mUsers = mUsers;
         this.btnDelete = btnDelete;
+        this.progressDialog = progressDialog;
         showDeleteButton();
     }
 
@@ -43,10 +46,10 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     public static class ViewHolder extends RecyclerView.ViewHolder {
         // each data item is just a string in this case
         View view;
-        TextView tvName;
+        TextView tvName, tvIds;
         CheckBox cbSelected;
         ImageView ivAdd;
-        LinearLayout ll_checkbox;
+        LinearLayout ll_checkbox, ll_add;
 
 
         public ViewHolder(View view) {
@@ -56,6 +59,8 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
             cbSelected = view.findViewById(R.id.cb_selected);
             ivAdd = view.findViewById(R.id.iv_add);
             ll_checkbox = view.findViewById(R.id.ll_checkbox);
+            ll_add = view.findViewById(R.id.ll_add);
+            tvIds = view.findViewById(R.id.tv_ids);
         }
 
         ;
@@ -102,16 +107,38 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
 
     // Replace the contents of a view (invoked by the layout manager)
     @Override
-    public void onBindViewHolder(final ViewHolder holder, int position) {
+    public void onBindViewHolder(final ViewHolder holder, final int position) {
         final UserModel user = mUsers.get(position);
         holder.tvName.setText(user.name);
         holder.cbSelected.setChecked(user.isSelected());
+        holder.tvIds.setText(user.getIds());
         holder.view.setBackgroundColor(Color.LTGRAY);
 
         holder.ll_checkbox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 holder.cbSelected.setChecked(!holder.cbSelected.isChecked());
+            }
+        });
+
+        holder.ll_checkbox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if (((HomeActivity) mContext).bluetoothSerial.checkBluetooth()) {
+                    if (!((HomeActivity) mContext).bluetoothSerial.isConnected()) {
+                        Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
+                    } else {
+
+                        int key = Utils.incrementCounter(mContext, 1);
+                        Global.gSelectedKey = key;
+                        Global.gSelectedUser = user;
+                        Global.gSelectedAction = Constants.ENROLL;
+                        Utils.sendMessage(((HomeActivity) mContext).bluetoothSerial, Constants.ENROLL, key);
+                    }
+                } else {
+                    ((HomeActivity) mContext).enableBluetooth();
+                }
             }
         });
 
@@ -137,13 +164,24 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         holder.ivAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!((HomeActivity) mContext).bluetoothSerial.isConnected()) {
-                    Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
+                if (((HomeActivity) mContext).bluetoothSerial.checkBluetooth()) {
+
+                    if (!((HomeActivity) mContext).bluetoothSerial.isConnected()) {
+                        Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
+                    } else {
+                        if (progressDialog.isShowing())
+                            progressDialog.dismiss();
+                        progressDialog.setMessage("Adding Record .. ");
+                        progressDialog.setCancelable(true);
+                        progressDialog.show();
+                        int key = Utils.incrementCounter(mContext, 1);
+                        Global.gSelectedKey = key;
+                        Global.gSelectedUser = user;
+                        Global.gSelectedAction = Constants.ENROLL;
+                        Utils.sendMessage(((HomeActivity) mContext).bluetoothSerial, Constants.ENROLL, key);
+                    }
                 } else {
-                    int key = Utils.incrementCounter(mContext, 1);
-                    Global.gSelectedKey = key;
-                    Global.gSelectedUser = user;
-                    Utils.sendMessage(((HomeActivity) mContext).bluetoothSerial, Constants.ENROLL, key);
+                    ((HomeActivity) mContext).enableBluetooth();
                 }
             }
         });

@@ -18,14 +18,9 @@ public class UserModel {
     public List<Integer> ids;
     private boolean isSelected;
 
-    public void createUser(Context mContext, String name) {
+    public void createUser(String name) {
         this.uuid = UUID.randomUUID().toString();
         this.name = name;
-        if (this.name != null) {
-            List<UserModel> users = getUsers(mContext);
-            users.add(this);
-            saveList(mContext, users);
-        }
     }
 
     public void addKey(int key) {
@@ -49,8 +44,9 @@ public class UserModel {
 
     public String getIds() {
         StringBuilder sb = new StringBuilder();
+        sb.append("Records: ");
         for (int id : ids) {
-            sb.append(id + " ");
+            sb.append(id + ", ");
         }
 
         return sb.toString();
@@ -66,11 +62,20 @@ public class UserModel {
     }
 
     public static void saveUser(Context mContext, UserModel userModel) {
-        if (userModel != null && userModel.name != null) {
-            List<UserModel> users = getUsers(mContext);
-            int indexOf = users.indexOf(userModel);
-            users.set(indexOf, userModel);
-            saveList(mContext, users);
+        try {
+            if (userModel != null && userModel.name != null) {
+                List<UserModel> users = getUsers(mContext);
+                int indexOf = users.indexOf(userModel);
+                if (indexOf >= 0) {
+                    users.set(indexOf, userModel);
+                } else {
+                    users.add(userModel);
+                }
+
+                saveList(mContext, users);
+            }
+        } catch (Exception e) {
+
         }
     }
 

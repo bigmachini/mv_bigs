@@ -1,12 +1,14 @@
 package net.bigmachini.mv_bigs.activities;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -21,6 +23,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.macroyau.blue2serial.BluetoothDeviceListDialog;
 import com.macroyau.blue2serial.BluetoothSerial;
 import com.macroyau.blue2serial.BluetoothSerialListener;
@@ -35,6 +38,8 @@ import net.bigmachini.mv_bigs.models.UserModel;
 import java.util.ArrayList;
 import java.util.List;
 
+import cn.pedant.SweetAlert.SweetAlertDialog;
+
 public class HomeActivity extends AppCompatActivity
         implements BluetoothSerialListener, BluetoothDeviceListDialog.OnDeviceSelectedListener {
 
@@ -48,8 +53,9 @@ public class HomeActivity extends AppCompatActivity
     private boolean crlf = false;
     private static final int REQUEST_ENABLE_BLUETOOTH = 1;
     private MenuItem actionConnect, actionDisconnect;
-    public BluetoothSerial bluetoothSerial;
-
+    public static BluetoothSerial bluetoothSerial;
+    MaterialDialog materialDialog;
+    ProgressDialog progressDialog;
 
     private ScrollView svTerminal;
     private TextView tvTerminal;
@@ -65,12 +71,18 @@ public class HomeActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                checkBluetooth();
-                if (!bluetoothSerial.isConnected()) {
-                    Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
+                if (bluetoothSerial.checkBluetooth()) {
+                    checkBluetooth();
+                    if (!bluetoothSerial.isConnected()) {
+                        Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
+                    } else {
+                        progressDialog.setMessage("Creating User");
+                        progressDialog.setCancelable(true);
+                        progressDialog.show();
+                        Utils.createUser(mContext);
+                    }
                 } else {
-                    Utils.createUser(mContext);
+                    enableBluetooth();
                 }
             }
         });
@@ -95,37 +107,36 @@ public class HomeActivity extends AppCompatActivity
         btnDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                checkBluetooth();
-                if (!bluetoothSerial.isConnected()) {
-                    Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
-                } else {
-                    List<UserModel> dUsers = new ArrayList<>(mAdapter.getUsers());
-                    StringBuilder sb = new StringBuilder();
-                    for (int i = dUsers.size() - 1; i >= 0; i--) {
-                        if (dUsers.get(i).isSelected()) {
-                            UserModel user = dUsers.get(i);
-                            if (user.ids.size() > 0) {
-                                sb.append(user.name + "\n");
-                            } else {
-                                dUsers.remove(i);
-                            }
+
+                List<UserModel> dUsers = new ArrayList<>(mAdapter.getUsers());
+                StringBuilder sb = new StringBuilder();
+                for (int i = dUsers.size() - 1; i >= 0; i--) {
+                    if (dUsers.get(i).isSelected()) {
+                        UserModel user = dUsers.get(i);
+                        if (user.ids.size() > 0) {
+                            sb.append(user.name + "\n");
+                        } else {
+                            dUsers.remove(i);
                         }
                     }
-                    if (sb.toString().isEmpty() || sb.toString().length() != 0) {
-                        Utils.toastText(mContext, "Please delete all ids for user(s):\n" + sb.toString());
-                    }
-
-                    mAdapter.clear();
-                    mAdapter.updateList(dUsers);
                 }
+                if (sb.toString().isEmpty() || sb.toString().length() != 0) {
+                    Utils.toastText(mContext, "Please delete all ids for user(s):\n" + sb.toString());
+                }
+
+                mAdapter.clear();
+                mAdapter.updateList(dUsers);
             }
         });
 
         // specify an adapter (see also next example)
-        mAdapter = new UserAdapter(mContext, users, btnDelete);
+        progressDialog = new ProgressDialog(this);
+        mAdapter = new UserAdapter(mContext, users, btnDelete, progressDialog);
         mRecyclerView.setAdapter(mAdapter);
         // Create a new instance of BluetoothSerial
         bluetoothSerial = new BluetoothSerial(this, this);
+
+
     }
 
     @Override
@@ -145,9 +156,28 @@ public class HomeActivity extends AppCompatActivity
         if (bluetoothSerial.checkBluetooth() && bluetoothSerial.isBluetoothEnabled()) {
             if (!bluetoothSerial.isConnected()) {
                 bluetoothSerial.start();
+                if (Global.gDevice != null) {
+                    connectDevice();
+                }
             }
         }
     }
+
+    public void connectDevice() {
+        progressDialog.setTitle("Connecting to device.");
+        progressDialog.setMessage("Please wait ... ");
+        progressDialog.show();
+        final Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                bluetoothSerial.connect(Global.gDevice);
+                invalidateOptionsMenu();
+                updateBluetoothState();
+            }
+        }, 1000);
+    }
+
 
     public boolean checkIfConnected() {
         if (bluetoothSerial.checkBluetooth() && bluetoothSerial.isBluetoothEnabled()) {
@@ -161,6 +191,8 @@ public class HomeActivity extends AppCompatActivity
     @Override
     protected void onStop() {
         super.onStop();
+        // Disconnect from the remote device and close the serial port
+        bluetoothSerial.stop();
     }
 
     @Override
@@ -168,8 +200,7 @@ public class HomeActivity extends AppCompatActivity
         super.onDestroy();
         Global.gSelectedUser = null;
         Global.gSelectedKey = 0;
-        // Disconnect from the remote device and close the serial port
-        //     bluetoothSerial.stop();
+        Global.gAddress = null;
     }
 
     @Override
@@ -196,12 +227,17 @@ public class HomeActivity extends AppCompatActivity
             return true;
         } else if (id == R.id.action_disconnect) {
             bluetoothSerial.stop();
+            Global.gAddress = null;
             return true;
         } else if (id == R.id.action_crlf) {
             crlf = !item.isChecked();
             item.setChecked(crlf);
             return true;
         } else if (id == R.id.action_delete_all) {
+            progressDialog.setMessage("Deleting records .. ");
+            progressDialog.setCancelable(true);
+            progressDialog.show();
+            Global.gSelectedAction = Constants.DELETE_ALL;
             deleteAll();
             return true;
         }
@@ -279,13 +315,19 @@ public class HomeActivity extends AppCompatActivity
 
     private void showDeviceListDialog() {
         // Display dialog for selecting a remote Bluetooth device
-        BluetoothDeviceListDialog dialog = new BluetoothDeviceListDialog(this);
-        dialog.setOnDeviceSelectedListener(this);
-        dialog.setTitle(R.string.paired_devices);
-        dialog.setDevices(bluetoothSerial.getPairedDevices());
-        dialog.showAddress(true);
-        dialog.show();
+        if (bluetoothSerial.checkBluetooth()) {
+            BluetoothDeviceListDialog dialog = new BluetoothDeviceListDialog(this);
+            dialog.setOnDeviceSelectedListener(this);
+            dialog.setTitle(R.string.paired_devices);
+            dialog.setDevices(bluetoothSerial.getPairedDevices());
+            dialog.showAddress(true);
+
+            dialog.show();
+        } else {
+            enableBluetooth();
+        }
     }
+
 
     /* Implementation of BluetoothSerialListener */
 
@@ -305,15 +347,22 @@ public class HomeActivity extends AppCompatActivity
 
     @Override
     public void onBluetoothDisabled() {
+
+    }
+
+    public void enableBluetooth() {
         Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
         startActivityForResult(enableBluetooth, REQUEST_ENABLE_BLUETOOTH);
     }
 
     @Override
     public void onBluetoothDeviceDisconnected() {
+        if (progressDialog.isShowing())
+            progressDialog.dismiss();
         invalidateOptionsMenu();
         updateBluetoothState();
     }
+
 
     @Override
     public void onConnectingBluetoothDevice() {
@@ -328,41 +377,61 @@ public class HomeActivity extends AppCompatActivity
 
     @Override
     public void onBluetoothSerialRead(String message) {
-        // Print the incoming message on the terminal screen
-        tvTerminal.append(getString(R.string.terminal_message_template,
-                bluetoothSerial.getConnectedDeviceName(),
-                message));
-        svTerminal.post(scrollTerminalToBottom);
-
+        if (progressDialog.isShowing())
+            progressDialog.dismiss();
         switch (Global.gSelectedAction) {
             case Constants.ENROLL:
-            case Constants.DELETE:
-                if (Global.gSelectedUser != null && Global.gSelectedKey != 0) {
-                    Global.gSelectedUser.addKey(Global.gSelectedKey);
-                    UserModel.saveUser(mContext, Global.gSelectedUser);
+                if (new String(message).equals(new String("1"))) {
+                    if (Global.gSelectedUser != null && Global.gSelectedKey != 0) {
+
+                        Global.gSelectedUser.addKey(Global.gSelectedKey);
+                        UserModel.saveUser(mContext, Global.gSelectedUser);
+                        new SweetAlertDialog(mContext, SweetAlertDialog.SUCCESS_TYPE)
+                                .setTitleText("SUCCESS!")
+                                .setContentText("ID: " + Global.gSelectedKey + " Added Successfully")
+                                .show();
+                        Global.gSelectedUser = null;
+                        Global.gSelectedKey = 0;
+                        mAdapter.clear();
+                        mAdapter.updateList();
+
+                    }
+                } else {
                     Global.gSelectedUser = null;
                     Global.gSelectedKey = 0;
+                    new SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                            .setTitleText("Operation failed!")
+                            .setContentText("Try again")
+                            .show();
+                    Global.gSelectedAction = "";
                 }
                 break;
 
             case Constants.DELETE_ALL:
-                if (new String(Constants.DELETE_ALL).equals(new String(message))) {
-                    mAdapter.updateList(new ArrayList<UserModel>());
-                    Global.gSelectedUser = null;
-                    Global.gSelectedKey = 0;
-                    Global.gSelectedAction = null;
-                }
+                mAdapter.updateList(new ArrayList<UserModel>());
+                new SweetAlertDialog(this, SweetAlertDialog.SUCCESS_TYPE)
+                        .setTitleText("SUCCESS!")
+                        .setContentText("Delete Successful")
+                        .show();
+                progressDialog.dismiss();
+                Global.gSelectedUser = null;
+                Global.gSelectedKey = 0;
+                Utils.setIntSetting(mContext, Constants.COUNTER, 0);
+                break;
+
+            default:
                 break;
         }
+        Global.gSelectedAction = "";
     }
 
     @Override
     public void onBluetoothSerialWrite(String message) {
         // Print the outgoing message on the terminal screen
-        tvTerminal.append(getString(R.string.terminal_message_template,
-                bluetoothSerial.getLocalAdapterName(),
-                message));
-        svTerminal.post(scrollTerminalToBottom);
+//        tvTerminal.append(getString(R.string.terminal_message_template,
+//                bluetoothSerial.getLocalAdapterName(),
+//                message));
+//        svTerminal.post(scrollTerminalToBottom);
     }
 
     /* Implementation of BluetoothDeviceListDialog.OnDeviceSelectedListener */
@@ -370,6 +439,10 @@ public class HomeActivity extends AppCompatActivity
     @Override
     public void onBluetoothDeviceSelected(BluetoothDevice device) {
         // Connect to the selected remote Bluetooth device
+        if (progressDialog.isShowing())
+            progressDialog.dismiss();
+        Global.gDevice = device;
+        Global.gAddress = device.getAddress();
         bluetoothSerial.connect(device);
     }
 

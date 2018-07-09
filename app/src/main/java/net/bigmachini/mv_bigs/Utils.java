@@ -40,16 +40,13 @@ public class Utils {
                             message = "Invalid name, should not be empty or less than 3 characters";
                         } else {
                             UserModel userModel = new UserModel();
-                            int key = incrementCounter(mContext, 1);
-                            userModel.addKey(key);
+                            userModel.createUser(userName);
+                            Global.gSelectedKey = incrementCounter(mContext, 1);
                             if (mContext instanceof HomeActivity) {
-                                Utils.sendMessage( ((HomeActivity) mContext).bluetoothSerial, Constants.ENROLL, key);
-                                userModel.createUser(mContext, userName);
-
-                                ((HomeActivity) mContext).mAdapter.updateList();
-
+                                Global.gSelectedUser = userModel;
+                                Global.gSelectedAction = Constants.ENROLL;
+                                Utils.sendMessage(((HomeActivity) mContext).bluetoothSerial, Constants.ENROLL, Global.gSelectedKey);
                             }
-
                             message = "User: " + userModel.name + " has been created";
                         }
                         Utils.toastText(mContext, message);
@@ -218,7 +215,7 @@ public class Utils {
 
 
     public static void sendMessage(final BluetoothSerial bluetoothSerial, final String action, final int key) {
-      boolean check = bluetoothSerial.isConnected();
+        boolean check = bluetoothSerial.isConnected();
         new Thread() {
             public void run() {
                 try {
@@ -235,7 +232,7 @@ public class Utils {
                             bluetoothSerial.write(Constants.DELETE_ALL);
                             break;
                     }
-                    sleep(5000);
+                    sleep(3000);
                     bluetoothSerial.write(String.valueOf(key));
                 } catch (Exception e) {
                 }
