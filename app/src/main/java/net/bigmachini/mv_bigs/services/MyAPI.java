@@ -31,6 +31,11 @@ public interface MyAPI {
     @POST("assign_device")
     Call<APIListResponse<DeviceStructure>> assignDevice(@FieldMap HashMap<String, Object> params);
 
+
+    @FormUrlEncoded
+    @POST("create_device_user")
+    Call<APIListResponse<UserStructure>> createDeviceUser(@FieldMap HashMap<String, Object> params);
+
     @FormUrlEncoded
     @POST("check_account")
     Call<APIResponse<Boolean>> checkAccount(@FieldMap HashMap<String, Object> params);
@@ -45,11 +50,13 @@ public interface MyAPI {
 
     @FormUrlEncoded
     @POST("/get_device_users")
-    Call<APIResponse<UserStructure>> getDeviceUser(@FieldMap HashMap<String, Object> params);
+    Call<APIListResponse<UserStructure>> getDeviceUser(@FieldMap HashMap<String, Object> params);
 
     @FormUrlEncoded
     @POST("/get_device_user_records")
-    Call<APIResponse<RecordStructure>> getUserRecords(@FieldMap HashMap<String, Object> params);
+    Call<APIListResponse<RecordStructure>> getUserRecords(@FieldMap HashMap<String, Object> params);
 
-
+    @FormUrlEncoded
+    @POST("/create_record")
+    Call<APIListResponse<RecordStructure>> createUserRecord(@FieldMap HashMap<String, Object> params);
 }

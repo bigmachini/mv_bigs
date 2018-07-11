@@ -26,7 +26,11 @@ public class UserEntity {
 
     @ColumnInfo(name = "device_id")
     @Expose
-    private int device_id;
+    private int deviceId;
+
+    @ColumnInfo(name = "is_selected")
+    @Expose
+    private boolean isSelected;
 
     @NonNull
     public int getId() {
@@ -45,12 +49,20 @@ public class UserEntity {
         this.name = name;
     }
 
-    public int getDevice_id() {
-        return device_id;
+    public int getDeviceId() {
+        return deviceId;
     }
 
-    public void setDevice_id(int device_id) {
-        this.device_id = device_id;
+    public void setDeviceId(int deviceId) {
+        this.deviceId = deviceId;
+    }
+
+    public boolean isSelected() {
+        return isSelected;
+    }
+
+    public void setSelected(boolean selected) {
+        isSelected = selected;
     }
 
     // Need this empty constructor for the database (SugarORM)
@@ -61,7 +73,7 @@ public class UserEntity {
     private UserEntity(UserEntity.UserBuilder userBuilder) {
         this.id = userBuilder.id;
         this.name = userBuilder.name;
-        this.device_id = userBuilder.deviceId;
+        this.deviceId = userBuilder.deviceId;
     }
 
 

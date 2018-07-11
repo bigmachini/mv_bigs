@@ -20,8 +20,12 @@ public class RecordController extends BaseController {
         return mRecordDao.getRecordById(RecordId);
     }
 
-    public List<RecordEntity> getRecordsByUserId(String userId) {
+    public List<RecordEntity> getRecordsByUserId(int userId) {
         return mRecordDao.getRecordByUserId(userId);
+    }
+
+    public List<RecordEntity> getRecordByUser(String recordId, int userId) {
+        return mRecordDao.getRecordByUser(recordId, userId);
     }
 
     public void deleteById(int RecordId) {

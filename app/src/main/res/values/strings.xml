@@ -54,4 +54,7 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="action_select_device">Device List</string>
+    <string name="fetching_devices">Fetching Devices</string>
+    <string name="no_users_found">No Users Found</string>
+    <string name="no_record">No Records Found</string>
 </resources>

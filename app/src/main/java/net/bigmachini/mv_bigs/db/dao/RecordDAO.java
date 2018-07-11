@@ -16,8 +16,10 @@ public interface RecordDAO {
     List<RecordEntity> getRecordById(int recordId);
 
     @Query("SELECT * FROM record_table WHERE user_id =:userId ORDER BY id DESC")
-    List<RecordEntity> getRecordByUserId(String userId);
+    List<RecordEntity> getRecordByUserId(int userId);
 
+    @Query("SELECT * FROM record_table WHERE name =:id and user_id=:userId ORDER BY id DESC")
+    List<RecordEntity> getRecordByUser(String id, int userId);
 
     @Query("SELECT COUNT(*) FROM record_table")
     int getCount();

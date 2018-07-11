@@ -20,10 +20,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ScrollView;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.macroyau.blue2serial.BluetoothDeviceListDialog;
 import com.macroyau.blue2serial.BluetoothSerial;
 import com.macroyau.blue2serial.BluetoothSerialListener;
@@ -33,12 +31,24 @@ import net.bigmachini.mv_bigs.Global;
 import net.bigmachini.mv_bigs.R;
 import net.bigmachini.mv_bigs.Utils;
 import net.bigmachini.mv_bigs.adapters.UserAdapter;
-import net.bigmachini.mv_bigs.models.UserModel;
+import net.bigmachini.mv_bigs.db.controllers.RecordController;
+import net.bigmachini.mv_bigs.db.controllers.UserController;
+import net.bigmachini.mv_bigs.db.entities.RecordEntity;
+import net.bigmachini.mv_bigs.db.entities.UserEntity;
+import net.bigmachini.mv_bigs.services.APIListResponse;
+import net.bigmachini.mv_bigs.services.APIService;
+import net.bigmachini.mv_bigs.services.MyAPI;
+import net.bigmachini.mv_bigs.structures.RecordStructure;
+import net.bigmachini.mv_bigs.structures.UserStructure;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import cn.pedant.SweetAlert.SweetAlertDialog;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class HomeActivity extends AppCompatActivity
         implements BluetoothSerialListener, BluetoothDeviceListDialog.OnDeviceSelectedListener {
@@ -49,16 +59,16 @@ public class HomeActivity extends AppCompatActivity
     private RecyclerView.LayoutManager mLayoutManager;
     private Context mContext;
     private Button btnDelete;
-    public List<UserModel> users;
+    public List<UserEntity> users;
     private boolean crlf = false;
     private static final int REQUEST_ENABLE_BLUETOOTH = 1;
     private MenuItem actionConnect, actionDisconnect;
     public static BluetoothSerial bluetoothSerial;
-    MaterialDialog materialDialog;
     ProgressDialog progressDialog;
-
+    private UserController mUserController;
+    private RecordController mRecordController;
     private ScrollView svTerminal;
-    private TextView tvTerminal;
+    static StringBuilder sb = new StringBuilder();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +81,7 @@ public class HomeActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (bluetoothSerial.checkBluetooth()) {
+            /*    if (bluetoothSerial.checkBluetooth()) {
                     checkBluetooth();
                     if (!bluetoothSerial.isConnected()) {
                         Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
@@ -79,21 +89,24 @@ public class HomeActivity extends AppCompatActivity
                         progressDialog.setMessage("Creating User");
                         progressDialog.setCancelable(true);
                         progressDialog.show();
-                        Utils.createUser(mContext);
+                        Utils.createUser(mContext, progressDialog);
                     }
                 } else {
                     enableBluetooth();
-                }
+                }*/
+
+
+                Utils.createUser(mContext);
             }
         });
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mContext = HomeActivity.this;
         btnDelete = findViewById(R.id.btn_delete);
-
+        mUserController = new UserController(mContext);
+        mRecordController = new RecordController(mContext);
         mRecyclerView = findViewById(R.id.rv_users);
         svTerminal = findViewById(R.id.sv_terminal);
-        tvTerminal = findViewById(R.id.tv_terminal);
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
@@ -103,18 +116,18 @@ public class HomeActivity extends AppCompatActivity
         mLayoutManager = new LinearLayoutManager(mContext);
 
         mRecyclerView.setLayoutManager(mLayoutManager);
-        users = UserModel.getUsers(mContext);
         btnDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                List<UserModel> dUsers = new ArrayList<>(mAdapter.getUsers());
+                List<UserEntity> dUsers = new ArrayList<>(mAdapter.getUsers());
                 StringBuilder sb = new StringBuilder();
                 for (int i = dUsers.size() - 1; i >= 0; i--) {
                     if (dUsers.get(i).isSelected()) {
-                        UserModel user = dUsers.get(i);
-                        if (user.ids.size() > 0) {
-                            sb.append(user.name + "\n");
+                        UserEntity user = dUsers.get(i);
+                        List<RecordEntity> recordEntities = mRecordController.getRecordsByUserId(user.getId());
+                        if (recordEntities.size() > 0) {
+                            sb.append(user.getName() + "\n");
                         } else {
                             dUsers.remove(i);
                         }
@@ -131,11 +144,11 @@ public class HomeActivity extends AppCompatActivity
 
         // specify an adapter (see also next example)
         progressDialog = new ProgressDialog(this);
-        mAdapter = new UserAdapter(mContext, users, btnDelete, progressDialog);
+        mAdapter = new UserAdapter(mContext, btnDelete, progressDialog);
         mRecyclerView.setAdapter(mAdapter);
         // Create a new instance of BluetoothSerial
         bluetoothSerial = new BluetoothSerial(this, this);
-
+        getUser(mContext);
 
     }
 
@@ -144,6 +157,9 @@ public class HomeActivity extends AppCompatActivity
         super.onStart();
         // Check Bluetooth availability on the device and set up the Bluetooth adapter
         bluetoothSerial.setup();
+        if (mAdapter != null) {
+            mAdapter.notifyDataSetChanged();
+        }
     }
 
     @Override
@@ -233,15 +249,21 @@ public class HomeActivity extends AppCompatActivity
             crlf = !item.isChecked();
             item.setChecked(crlf);
             return true;
+        } else if (id == R.id.action_select_device) {
+            startActivity(new Intent(HomeActivity.this, DeviceActivity.class));
+            finish();
+            return true;
         } else if (id == R.id.action_delete_all) {
             progressDialog.setMessage("Deleting records .. ");
             progressDialog.setCancelable(true);
-            progressDialog.show();
             Global.gSelectedAction = Constants.DELETE_ALL;
             deleteAll();
             return true;
         }
-        return super.onOptionsItemSelected(item);
+        return super.
+
+                onOptionsItemSelected(item);
+
     }
 
     private void deleteAll() {
@@ -377,52 +399,48 @@ public class HomeActivity extends AppCompatActivity
 
     @Override
     public void onBluetoothSerialRead(String message) {
-        if (progressDialog.isShowing())
-            progressDialog.dismiss();
-        switch (Global.gSelectedAction) {
-            case Constants.ENROLL:
-                if (new String(message).equals(new String("1"))) {
-                    if (Global.gSelectedUser != null && Global.gSelectedKey != 0) {
-
-                        Global.gSelectedUser.addKey(Global.gSelectedKey);
-                        UserModel.saveUser(mContext, Global.gSelectedUser);
-                        new SweetAlertDialog(mContext, SweetAlertDialog.SUCCESS_TYPE)
-                                .setTitleText("SUCCESS!")
-                                .setContentText("ID: " + Global.gSelectedKey + " Added Successfully")
-                                .show();
+        sb.append(message);
+        if (sb.toString().contains(",")) {
+            String res = sb.toString().trim();
+            res = res.replace(',', ' ');
+            res = res.trim();
+            int response = Integer.parseInt(res);
+            if (progressDialog.isShowing())
+                progressDialog.dismiss();
+            switch (Global.gSelectedAction) {
+                case Constants.ENROLL:
+                    if (response < 127) {
+                        if (Global.gSelectedUser != null) {
+                            createRecord(mContext, response);
+                        }
+                    } else {
                         Global.gSelectedUser = null;
                         Global.gSelectedKey = 0;
-                        mAdapter.clear();
-                        mAdapter.updateList();
-
+                        new SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                                .setTitleText("Operation failed!")
+                                .setContentText("Try again")
+                                .show();
+                        Global.gSelectedAction = "";
                     }
-                } else {
+                    break;
+
+                case Constants.DELETE_ALL:
+                    mAdapter.updateList(new ArrayList<UserEntity>());
+                    new SweetAlertDialog(this, SweetAlertDialog.SUCCESS_TYPE)
+                            .setTitleText("SUCCESS!")
+                            .setContentText("Delete Successful")
+                            .show();
+                    progressDialog.dismiss();
                     Global.gSelectedUser = null;
                     Global.gSelectedKey = 0;
-                    new SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
-                            .setTitleText("Operation failed!")
-                            .setContentText("Try again")
-                            .show();
-                    Global.gSelectedAction = "";
-                }
-                break;
+                    Utils.setIntSetting(mContext, Constants.COUNTER, 0);
+                    break;
 
-            case Constants.DELETE_ALL:
-                mAdapter.updateList(new ArrayList<UserModel>());
-                new SweetAlertDialog(this, SweetAlertDialog.SUCCESS_TYPE)
-                        .setTitleText("SUCCESS!")
-                        .setContentText("Delete Successful")
-                        .show();
-                progressDialog.dismiss();
-                Global.gSelectedUser = null;
-                Global.gSelectedKey = 0;
-                Utils.setIntSetting(mContext, Constants.COUNTER, 0);
-                break;
-
-            default:
-                break;
+                default:
+                    break;
+            }
+            Global.gSelectedAction = "";
         }
-        Global.gSelectedAction = "";
     }
 
     @Override
@@ -455,4 +473,200 @@ public class HomeActivity extends AppCompatActivity
             svTerminal.fullScroll(ScrollView.FOCUS_DOWN);
         }
     };
+
+
+    private void updateDatabase(List<UserStructure> data) {
+        for (UserStructure userStructure : data) {
+            UserEntity userEntity = new UserEntity();
+            userEntity.setId(userStructure.id);
+            userEntity.setName(userStructure.name);
+            userEntity.setDeviceId(userStructure.deviceId);
+            mUserController.createUser(userEntity);
+        }
+    }
+
+    private void updateRecordDatabase(List<RecordStructure> data) {
+        for (RecordStructure recordStructure : data) {
+            RecordEntity recordEntity = new RecordEntity();
+            recordEntity.setId(recordStructure.id);
+            recordEntity.setName(recordStructure.name);
+            recordEntity.setUserId(recordStructure.userId);
+            mRecordController.createRecord(recordEntity);
+        }
+    }
+
+    public void createUser(Context context, UserStructure userStructure) {
+        if (Utils.CheckConnection(context)) {
+            progressDialog.setMessage("Creating User");
+            progressDialog.setCancelable(true);
+            progressDialog.show();
+            progressDialog.show();
+            HashMap<String, Object> params = new HashMap<>();
+            params.put("device_id", userStructure.deviceId);
+            params.put("name", userStructure.name);
+            MyAPI myAPI = APIService.createService(MyAPI.class, 60);
+            Call<APIListResponse<UserStructure>> call = myAPI.createDeviceUser(params);
+            call.enqueue(new Callback<APIListResponse<UserStructure>>() {
+                @Override
+                public void onResponse(Call<APIListResponse<UserStructure>> call, Response<APIListResponse<UserStructure>> response) {
+
+                    if (progressDialog != null && progressDialog.isShowing())
+                        progressDialog.dismiss();
+                    try {
+                        if (response.code() >= 200 && response.code() < 300) {
+                            if (response.body().nStatus < 10) {
+                                List<UserStructure> users = response.body().data;
+                                updateDatabase(users);
+                                mAdapter = new UserAdapter(mContext, btnDelete, progressDialog);
+                                mRecyclerView.setAdapter(mAdapter);
+                                mAdapter.notifyDataSetChanged();
+                                new SweetAlertDialog(mContext, SweetAlertDialog.SUCCESS_TYPE)
+                                        .setTitleText("SUCCESS!")
+                                        .setContentText("User: " + Global.gSelectedUser.getName() + " Added Successfully")
+                                        .show();
+
+                                if (users.size() == 0) {
+                                    Toast.makeText(mContext, getString(R.string.no_users_found), Toast.LENGTH_LONG).show();
+                                }
+                            } else {
+                                Toast.makeText(mContext, getString(R.string.no_users_found), Toast.LENGTH_LONG).show();
+
+                            }
+                        } else {
+                            Toast.makeText(mContext, response.body().strMessage.toString(), Toast.LENGTH_LONG).show();
+                        }
+                    } catch (Exception e) {
+
+                        if (progressDialog != null && progressDialog.isShowing())
+                            progressDialog.dismiss();
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<APIListResponse<UserStructure>> call, Throwable t) {
+                    if (progressDialog != null && progressDialog.isShowing())
+                        progressDialog.dismiss();
+                    t.printStackTrace();
+                }
+            });
+        } else {
+
+            if (progressDialog != null && progressDialog.isShowing())
+                progressDialog.dismiss();
+            if (mAdapter != null) {
+                mAdapter = new UserAdapter(mContext, btnDelete, progressDialog);
+                mRecyclerView.setAdapter(mAdapter);
+            }
+        }
+    }
+
+
+    public void createRecord(Context context, int recordId) {
+        if (Utils.CheckConnection(context)) {
+            progressDialog.setMessage("Creating Record");
+            progressDialog.setCancelable(false);
+            progressDialog.show();
+            HashMap<String, Object> params = new HashMap<>();
+            params.put("name", recordId);
+            params.put("user_id", Global.gSelectedUser.getId());
+            MyAPI myAPI = APIService.createService(MyAPI.class, 60);
+            Call<APIListResponse<RecordStructure>> call = myAPI.createUserRecord(params);
+            call.enqueue(new Callback<APIListResponse<RecordStructure>>() {
+                @Override
+                public void onResponse(Call<APIListResponse<RecordStructure>> call, Response<APIListResponse<RecordStructure>> response) {
+
+                    if (progressDialog != null && progressDialog.isShowing())
+                        progressDialog.dismiss();
+                    try {
+                        if (response.code() >= 200 && response.code() < 300) {
+                            if (response.body().nStatus < 10) {
+                                List<RecordStructure> records = response.body().data;
+                                updateRecordDatabase(records);
+                                mAdapter = new UserAdapter(mContext, btnDelete, progressDialog);
+                                mRecyclerView.setAdapter(mAdapter);
+                                mAdapter.notifyDataSetChanged();
+                                new SweetAlertDialog(mContext, SweetAlertDialog.SUCCESS_TYPE)
+                                        .setTitleText("SUCCESS!")
+                                        .setContentText("User: " + Global.gSelectedUser.getName() + " Added Successfully")
+                                        .show();
+
+                                if (users.size() == 0) {
+                                    Toast.makeText(mContext, getString(R.string.no_users_found), Toast.LENGTH_LONG).show();
+                                }
+                            } else {
+                                Toast.makeText(mContext, getString(R.string.no_users_found), Toast.LENGTH_LONG).show();
+
+                            }
+                        } else {
+                            Toast.makeText(mContext, response.body().strMessage.toString(), Toast.LENGTH_LONG).show();
+                        }
+                    } catch (Exception e) {
+
+                        if (progressDialog != null && progressDialog.isShowing())
+                            progressDialog.dismiss();
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<APIListResponse<RecordStructure>> call, Throwable t) {
+                    if (progressDialog != null && progressDialog.isShowing())
+                        progressDialog.dismiss();
+                    t.printStackTrace();
+                }
+            });
+        } else {
+
+            if (progressDialog != null && progressDialog.isShowing())
+                progressDialog.dismiss();
+            if (mAdapter != null) {
+                mAdapter = new UserAdapter(mContext, btnDelete, progressDialog);
+                mRecyclerView.setAdapter(mAdapter);
+            }
+        }
+    }
+    public void getUser(Context context) {
+        if (Utils.CheckConnection(context)) {
+            HashMap<String, Object> params = new HashMap<>();
+            params.put("device_id", Global.gSelectedDevice.getId());
+            MyAPI myAPI = APIService.createService(MyAPI.class, 60);
+            Call<APIListResponse<UserStructure>> call = myAPI.getDeviceUser(params);
+            call.enqueue(new Callback<APIListResponse<UserStructure>>() {
+                @Override
+                public void onResponse(Call<APIListResponse<UserStructure>> call, Response<APIListResponse<UserStructure>> response) {
+                    try {
+                        if (response.code() >= 200 && response.code() < 300) {
+                            if (response.body().nStatus < 10) {
+                                List<UserStructure> users = response.body().data;
+                                updateDatabase(users);
+                                mAdapter = new UserAdapter(mContext, btnDelete, progressDialog);
+                                mRecyclerView.setAdapter(mAdapter);
+
+                                if (users.size() == 0) {
+                                    Toast.makeText(mContext, getString(R.string.no_users_found), Toast.LENGTH_LONG).show();
+                                }
+                            } else {
+                                Toast.makeText(mContext, getString(R.string.no_users_found), Toast.LENGTH_LONG).show();
+                            }
+                        } else {
+                            Toast.makeText(mContext, response.body().strMessage.toString(), Toast.LENGTH_LONG).show();
+                        }
+                    } catch (Exception e) {
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<APIListResponse<UserStructure>> call, Throwable t) {
+                }
+            });
+        } else {
+            if (mAdapter != null) {
+                mAdapter = new UserAdapter(mContext, btnDelete, progressDialog);
+                mRecyclerView.setAdapter(mAdapter);
+                mAdapter.notifyDataSetChanged();
+            }
+        }
+    }
+
 }

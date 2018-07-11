@@ -16,20 +16,23 @@ import net.bigmachini.mv_bigs.Global;
 import net.bigmachini.mv_bigs.R;
 import net.bigmachini.mv_bigs.Utils;
 import net.bigmachini.mv_bigs.activities.DeviceIdActivity;
+import net.bigmachini.mv_bigs.db.controllers.RecordController;
+import net.bigmachini.mv_bigs.db.entities.RecordEntity;
 import net.bigmachini.mv_bigs.models.UserModel;
 
 import java.util.List;
 
 public class DeviceIdAdapter extends RecyclerView.Adapter<DeviceIdAdapter.ViewHolder> {
     private final Context mContext;
-    private List<Integer> mDevices;
+    private List<RecordEntity> mRecords;
     UserModel userModel;
     ProgressDialog progressDialog;
+    RecordController mRecordController;
 
-    public DeviceIdAdapter(Context context, List<Integer> mDevices, UserModel userModel, ProgressDialog progressDialog) {
+    public DeviceIdAdapter(Context context, ProgressDialog progressDialog) {
         this.mContext = context;
-        this.mDevices = mDevices;
-        this.userModel = userModel;
+        mRecordController = new RecordController(mContext);
+        this.mRecords = mRecordController.getRecordsByUserId(Global.gSelectedUser.getId());
         this.progressDialog = progressDialog;
     }
 
@@ -63,8 +66,9 @@ public class DeviceIdAdapter extends RecyclerView.Adapter<DeviceIdAdapter.ViewHo
     // Replace the contents of a view (invoked by the layout manager)
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
-        final int device = mDevices.get(position);
-        holder.tvName.setText(userModel.name + " : " + device);
+        final RecordEntity record = mRecords.get(position);
+        Global.gSelectedRecord = record;
+        holder.tvName.setText(userModel.name + " : " + record.getName());
         holder.view.setBackgroundColor(Color.LTGRAY);
         holder.ivDelete.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -79,11 +83,7 @@ public class DeviceIdAdapter extends RecyclerView.Adapter<DeviceIdAdapter.ViewHo
                         progressDialog.setCancelable(true);
                         progressDialog.show();
                         Global.gSelectedAction = Constants.DELETE;
-                        Global.gSelectedKey = mDevices.get(position);
-                        Utils.sendMessage(((DeviceIdActivity) mContext).bluetoothSerial, Constants.DELETE, mDevices.get(position));
-                        mDevices.remove(position);
-                        userModel.ids = mDevices;
-                        Global.gSelectedUser = userModel;
+                        Utils.sendMessage(((DeviceIdActivity) mContext).bluetoothSerial, Constants.DELETE, mRecords.get(position).getName());
                     }
                 } else
 
@@ -98,6 +98,6 @@ public class DeviceIdAdapter extends RecyclerView.Adapter<DeviceIdAdapter.ViewHo
     // Return the size of your dataset (invoked by the layout manager)
     @Override
     public int getItemCount() {
-        return mDevices.size();
+        return mRecords.size();
     }
 }

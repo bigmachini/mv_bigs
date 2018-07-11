@@ -8,16 +8,19 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.text.InputType;
 import android.text.format.DateFormat;
 import android.util.Patterns;
 import android.widget.Toast;
 
+import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.macroyau.blue2serial.BluetoothSerial;
 
 import net.bigmachini.mv_bigs.activities.HomeActivity;
-import net.bigmachini.mv_bigs.models.UserModel;
+import net.bigmachini.mv_bigs.db.entities.UserEntity;
+import net.bigmachini.mv_bigs.structures.UserStructure;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -39,22 +42,32 @@ public class Utils {
                         if (userName.isEmpty() || userName.length() < 3) {
                             message = "Invalid name, should not be empty or less than 3 characters";
                         } else {
-                            UserModel userModel = new UserModel();
-                            userModel.createUser(userName);
+                            UserEntity userEntity = new UserEntity();
+                            userEntity.setDeviceId(Global.gSelectedDevice.getId());
+                            userEntity.setName(userName);
                             Global.gSelectedKey = incrementCounter(mContext, 1);
                             if (mContext instanceof HomeActivity) {
-                                Global.gSelectedUser = userModel;
+                                Global.gSelectedUser = userEntity;
                                 Global.gSelectedAction = Constants.ENROLL;
-                                Utils.sendMessage(((HomeActivity) mContext).bluetoothSerial, Constants.ENROLL, Global.gSelectedKey);
                             }
-                            message = "User: " + userModel.name + " has been created";
-                        }
-                        Utils.toastText(mContext, message);
+                            UserStructure userStructure =  new UserStructure();
+                            userStructure.name = userName;
+                            userStructure.deviceId =  Global.gSelectedDevice.getId();
 
+                            if( mContext instanceof  HomeActivity) {
+                                ((HomeActivity)mContext).createUser(mContext, userStructure);
+                            }
+                        }
                         dialog.dismiss();
                     }
                 }).positiveColorRes(R.color.colorGreen)
                 .negativeText("Close")
+                .onNegative(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+
+                    }
+                })
                 .show();
     }
 
@@ -214,7 +227,7 @@ public class Utils {
     }
 
 
-    public static void sendMessage(final BluetoothSerial bluetoothSerial, final String action, final int key) {
+    public static void sendMessage(final BluetoothSerial bluetoothSerial, final String action, final String key) {
         boolean check = bluetoothSerial.isConnected();
         new Thread() {
             public void run() {

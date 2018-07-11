@@ -22,19 +22,27 @@ import net.bigmachini.mv_bigs.R;
 import net.bigmachini.mv_bigs.Utils;
 import net.bigmachini.mv_bigs.activities.DeviceIdActivity;
 import net.bigmachini.mv_bigs.activities.HomeActivity;
-import net.bigmachini.mv_bigs.models.UserModel;
+import net.bigmachini.mv_bigs.db.controllers.RecordController;
+import net.bigmachini.mv_bigs.db.controllers.UserController;
+import net.bigmachini.mv_bigs.db.entities.RecordEntity;
+import net.bigmachini.mv_bigs.db.entities.UserEntity;
 
 import java.util.List;
+import java.util.Random;
 
 public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     private final Context mContext;
-    private List<UserModel> mUsers;
+    private List<UserEntity> mUsers;
     ProgressDialog progressDialog;
+    private UserController mUserController;
+    private RecordController mRecordController;
     Button btnDelete;
 
-    public UserAdapter(Context context, List<UserModel> mUsers, Button btnDelete, ProgressDialog progressDialog) {
+    public UserAdapter(Context context, Button btnDelete, ProgressDialog progressDialog) {
         this.mContext = context;
-        this.mUsers = mUsers;
+        mUserController = new UserController(context);
+        mRecordController = new RecordController(context);
+        this.mUsers = mUserController.getUserByDeviceId(Global.gSelectedDevice.getId());
         this.btnDelete = btnDelete;
         this.progressDialog = progressDialog;
         showDeleteButton();
@@ -72,31 +80,27 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     public UserAdapter.ViewHolder onCreateViewHolder(ViewGroup parent,
                                                      int viewType) {
         View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_users, parent, false);
-        return new ViewHolder(itemView);
+        return new UserAdapter.ViewHolder(itemView);
     }
 
-    public void updateList(List<UserModel> users) {
-        this.mUsers = users;
-        UserModel.saveList(mContext, this.mUsers);
-        showDeleteButton();
-        notifyDataSetChanged();
+    public void updateList(List<UserEntity> users) {
+        saveUser(users);
+        updateList();
     }
 
-    public void updateList() {
-        this.mUsers = UserModel.getUsers(mContext);
-        showDeleteButton();
-        notifyDataSetChanged();
-    }
-
-    public void addList(UserModel userModel) {
-        if (userModel != null && userModel.name != null) {
-            this.mUsers.add(userModel);
-            UserModel.saveList(mContext, mUsers);
-            notifyDataSetChanged();
+    private void saveUser(List<UserEntity> users) {
+        for (UserEntity userEntity : users) {
+            mUserController.createUser(userEntity);
         }
     }
 
-    public List<UserModel> getUsers() {
+    public void updateList() {
+        this.mUsers = mUserController.getUserByDeviceId(Global.gSelectedDevice.getId());
+        showDeleteButton();
+        notifyDataSetChanged();
+    }
+
+    public List<UserEntity> getUsers() {
         return mUsers;
     }
 
@@ -107,11 +111,11 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
 
     // Replace the contents of a view (invoked by the layout manager)
     @Override
-    public void onBindViewHolder(final ViewHolder holder, final int position) {
-        final UserModel user = mUsers.get(position);
-        holder.tvName.setText(user.name);
+    public void onBindViewHolder(final UserAdapter.ViewHolder holder, final int position) {
+        final UserEntity user = mUsers.get(position);
+        holder.tvName.setText(user.getName());
         holder.cbSelected.setChecked(user.isSelected());
-        holder.tvIds.setText(user.getIds());
+        holder.tvIds.setText(getIds(mRecordController.getRecordsByUserId(user.getId())));
         holder.view.setBackgroundColor(Color.LTGRAY);
 
         holder.ll_checkbox.setOnClickListener(new View.OnClickListener() {
@@ -134,7 +138,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
                         Global.gSelectedKey = key;
                         Global.gSelectedUser = user;
                         Global.gSelectedAction = Constants.ENROLL;
-                        Utils.sendMessage(((HomeActivity) mContext).bluetoothSerial, Constants.ENROLL, key);
+                        Utils.sendMessage(((HomeActivity) mContext).bluetoothSerial, Constants.ENROLL, String.valueOf(key));
                     }
                 } else {
                     ((HomeActivity) mContext).enableBluetooth();
@@ -147,8 +151,8 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 user.setSelected(isChecked);
                 holder.view.setBackgroundColor(user.isSelected() ? Color.CYAN : Color.LTGRAY);
-                UserModel.saveUser(mContext, user);
-                showDeleteButton();
+                mUserController.createUser(user);
+                updateList();
             }
         });
 
@@ -169,16 +173,22 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
                     if (!((HomeActivity) mContext).bluetoothSerial.isConnected()) {
                         Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
                     } else {
+                        List<RecordEntity> records;
+                        int recordId;
+                        Global.gSelectedUser = user;
+                        do {
+                            recordId = new Random().nextInt(127);
+                            records = mRecordController.getRecordByUser(String.valueOf(recordId), Global.gSelectedUser.getId());
+                        } while (records.size() > 0);
                         if (progressDialog.isShowing())
                             progressDialog.dismiss();
                         progressDialog.setMessage("Adding Record .. ");
                         progressDialog.setCancelable(true);
                         progressDialog.show();
-                        int key = Utils.incrementCounter(mContext, 1);
-                        Global.gSelectedKey = key;
-                        Global.gSelectedUser = user;
+                        Global.gSelectedKey = recordId;
+
                         Global.gSelectedAction = Constants.ENROLL;
-                        Utils.sendMessage(((HomeActivity) mContext).bluetoothSerial, Constants.ENROLL, key);
+                        Utils.sendMessage(((HomeActivity) mContext).bluetoothSerial, Constants.ENROLL, String.valueOf(recordId));
                     }
                 } else {
                     ((HomeActivity) mContext).enableBluetooth();
@@ -188,11 +198,22 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     }
 
 
+    public String getIds(List<RecordEntity> data) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Records: ");
+        for (RecordEntity recordEntity : data) {
+            sb.append(recordEntity.getId() + ", ");
+        }
+
+        return sb.toString();
+    }
+
+
     private void showDeleteButton() {
         boolean showButton = false;
         int count = 0;
 
-        for (UserModel user : mUsers) {
+        for (UserEntity user : mUsers) {
             if (user.isSelected() == true) {
                 showButton = true;
                 count++;

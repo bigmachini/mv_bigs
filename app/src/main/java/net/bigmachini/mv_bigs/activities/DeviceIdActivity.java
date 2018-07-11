@@ -30,11 +30,22 @@ import net.bigmachini.mv_bigs.Global;
 import net.bigmachini.mv_bigs.R;
 import net.bigmachini.mv_bigs.Utils;
 import net.bigmachini.mv_bigs.adapters.DeviceIdAdapter;
+import net.bigmachini.mv_bigs.db.controllers.RecordController;
+import net.bigmachini.mv_bigs.db.entities.RecordEntity;
 import net.bigmachini.mv_bigs.models.UserModel;
+import net.bigmachini.mv_bigs.services.APIListResponse;
+import net.bigmachini.mv_bigs.services.APIService;
+import net.bigmachini.mv_bigs.services.MyAPI;
+import net.bigmachini.mv_bigs.structures.RecordStructure;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
 import cn.pedant.SweetAlert.SweetAlertDialog;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class DeviceIdActivity extends AppCompatActivity
         implements BluetoothSerialListener, BluetoothDeviceListDialog.OnDeviceSelectedListener {
@@ -44,8 +55,8 @@ public class DeviceIdActivity extends AppCompatActivity
     public DeviceIdAdapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
     private Context mContext;
+    RecordController mRecordController;
     private Button btnDelete;
-    public List<Integer> deviceIds;
     private boolean crlf = false;
     private static final int REQUEST_ENABLE_BLUETOOTH = 1;
     private MenuItem actionConnect, actionDisconnect;
@@ -67,19 +78,26 @@ public class DeviceIdActivity extends AppCompatActivity
                 if (!bluetoothSerial.isConnected()) {
                     Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
                 } else {
-                    int key = Utils.incrementCounter(mContext, 1);
-                    userModel.addKey(key);
-                    Global.gSelectedKey = key;
-                    Utils.sendMessage(bluetoothSerial, Constants.ENROLL, key);
+                    List<RecordEntity> records;
+                    int recordId;
+                    do {
+                        recordId = new Random().nextInt(127);
+                        records = mRecordController.getRecordByUser(String.valueOf(recordId), Global.gSelectedUser.getId());
+                    } while (records.size() > 0);
+                    Global.gSelectedKey = recordId;
+                    Utils.sendMessage(bluetoothSerial, Constants.ENROLL, String.valueOf(recordId));
                     UserModel.saveUser(mContext, userModel);
                 }
             }
         });
+        fab.setVisibility(View.GONE);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mContext = DeviceIdActivity.this;
+        mRecordController = new RecordController(mContext);
+        getRecords(mContext);
         btnDelete = findViewById(R.id.btn_delete);
-        userModel = Global.gSelectedUser;
+        userModel = Global.gSelectedUser1;
         mRecyclerView = findViewById(R.id.rv_device_ids);
 
         // use this setting to improve performance if you know that changes
@@ -90,16 +108,12 @@ public class DeviceIdActivity extends AppCompatActivity
         mLayoutManager = new LinearLayoutManager(mContext);
 
         mRecyclerView.setLayoutManager(mLayoutManager);
-        deviceIds = userModel.ids;
-
         progressDialog = new ProgressDialog(this);
         // specify an adapter (see also next example)
-        mAdapter = new DeviceIdAdapter(mContext, deviceIds, userModel, progressDialog);
+        mAdapter = new DeviceIdAdapter(mContext, progressDialog);
         mRecyclerView.setAdapter(mAdapter);
         // Create a new instance of BluetoothSerial
         bluetoothSerial = new BluetoothSerial(this, this);
-
-
     }
 
     @Override
@@ -107,6 +121,11 @@ public class DeviceIdActivity extends AppCompatActivity
         super.onStart();
         // Check Bluetooth availability on the device and set up the Bluetooth adapter
         bluetoothSerial.setup();
+
+        if (mAdapter != null) {
+            mAdapter = new DeviceIdAdapter(mContext, progressDialog);
+            mRecyclerView.setAdapter(mAdapter);
+        }
     }
 
     @Override
@@ -123,7 +142,6 @@ public class DeviceIdActivity extends AppCompatActivity
                 if (Global.gDevice != null) {
                     bluetoothSerial.connect(Global.gDevice);
                     connectDevice();
-
                 }
             }
         }
@@ -304,7 +322,7 @@ public class DeviceIdActivity extends AppCompatActivity
 
         switch (Global.gSelectedAction) {
             case Constants.DELETE:
-                if (Global.gSelectedUser != null) {
+                if (Global.gSelectedUser1 != null) {
                     List<UserModel> userModels = UserModel.getUsers(mContext);
                     int indexOf = userModels.indexOf(userModel);
                     userModels.set(indexOf, userModel);
@@ -349,4 +367,65 @@ public class DeviceIdActivity extends AppCompatActivity
             // svTerminal.fullScroll(ScrollView.FOCUS_DOWN);
         }
     };
+
+    public void getRecords(Context context) {
+        if (Utils.CheckConnection(context)) {
+            HashMap<String, Object> params = new HashMap<>();
+            params.put("user_id", Global.gSelectedUser.getId());
+            MyAPI myAPI = APIService.createService(MyAPI.class, 60);
+            Call<APIListResponse<RecordStructure>> call = myAPI.getUserRecords(params);
+            call.enqueue(new Callback<APIListResponse<RecordStructure>>() {
+                @Override
+                public void onResponse(Call<APIListResponse<RecordStructure>> call, Response<APIListResponse<RecordStructure>> response) {
+                    try {
+                        if (response.code() >= 200 && response.code() < 300) {
+                            if (response.body().nStatus < 10) {
+                                List<RecordStructure> records = response.body().data;
+                                if (records == null || records.size() == 0) {
+                                    Toast.makeText(mContext, getString(R.string.no_record), Toast.LENGTH_LONG).show();
+                                    return;
+                                }
+                                updateDatabase(records);
+                                mAdapter = new DeviceIdAdapter(mContext, progressDialog);
+                                mRecyclerView.setAdapter(mAdapter);
+
+                                if (records.size() == 0) {
+                                    Toast.makeText(mContext, getString(R.string.no_record), Toast.LENGTH_LONG).show();
+                                }
+                            } else {
+                                Toast.makeText(mContext, getString(R.string.no_record), Toast.LENGTH_LONG).show();
+
+                            }
+                        } else {
+                            Toast.makeText(mContext, response.body().strMessage.toString(), Toast.LENGTH_LONG).show();
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<APIListResponse<RecordStructure>> call, Throwable t) {
+                    t.printStackTrace();
+                }
+            });
+        } else {
+            if (mAdapter != null) {
+                mAdapter = new DeviceIdAdapter(mContext, progressDialog);
+                mRecyclerView.setAdapter(mAdapter);
+                mAdapter.notifyDataSetChanged();
+            }
+        }
+    }
+
+    private void updateDatabase(List<RecordStructure> data) {
+        for (RecordStructure recordStructure : data) {
+            RecordEntity recordEntity = new RecordEntity();
+            recordEntity.setId(recordStructure.id);
+            recordEntity.setName(recordStructure.name);
+            recordEntity.setUserId(recordStructure.userId);
+            mRecordController.createRecord(recordEntity);
+        }
+    }
+
 }

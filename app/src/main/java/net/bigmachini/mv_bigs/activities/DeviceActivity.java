@@ -96,7 +96,7 @@ public class DeviceActivity extends AppCompatActivity {
         mAdapter = new DeviceAdapter(mContext);
         rvDevices.setAdapter(mAdapter);
         mDialog = new MaterialDialog.Builder(mContext)
-                .title(R.string.login)
+                .title(R.string.fetching_devices)
                 .content(R.string.please_wait)
                 .progress(true, 0)
                 .show();

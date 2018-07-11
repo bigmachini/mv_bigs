@@ -14,7 +14,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.macroyau.blue2serial.BluetoothDeviceListDialog;
 import com.macroyau.blue2serial.BluetoothSerial;
 import com.macroyau.blue2serial.BluetoothSerialListener;
@@ -83,7 +82,7 @@ public class BaseActivity extends AppCompatActivity implements BluetoothSerialLi
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Global.gSelectedUser = null;
+        Global.gSelectedUser1 = null;
         Global.gSelectedKey = 0;
         Global.gAddress = null;
     }
@@ -256,12 +255,12 @@ public class BaseActivity extends AppCompatActivity implements BluetoothSerialLi
         switch (Global.gSelectedAction) {
             case Constants.ENROLL:
             case Constants.DELETE:
-                if (Global.gSelectedUser != null && Global.gSelectedKey != 0) {
+                if (Global.gSelectedUser1 != null && Global.gSelectedKey != 0) {
 
-                    Global.gSelectedUser.addKey(Global.gSelectedKey);
-                    UserModel.saveUser(mContext, Global.gSelectedUser);
+                    Global.gSelectedUser1.addKey(Global.gSelectedKey);
+                    UserModel.saveUser(mContext, Global.gSelectedUser1);
                     Utils.toastText(mContext, "ID: " + Global.gSelectedKey + " Added Successfully");
-                    Global.gSelectedUser = null;
+                    Global.gSelectedUser1 = null;
                     Global.gSelectedKey = 0;
                     //mAdapter.clear();
                     //mAdapter.updateList();
@@ -273,7 +272,7 @@ public class BaseActivity extends AppCompatActivity implements BluetoothSerialLi
                // mAdapter.updateList(new ArrayList<UserModel>());
                 Utils.toastText(mContext, "Deleted Successfully");
                 progressDialog.dismiss();
-                Global.gSelectedUser = null;
+                Global.gSelectedUser1 = null;
                 Global.gSelectedKey = 0;
                 Utils.setIntSetting(mContext, Constants.COUNTER, 0);
                 break;
