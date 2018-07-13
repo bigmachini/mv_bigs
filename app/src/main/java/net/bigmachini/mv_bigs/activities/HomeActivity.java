@@ -83,9 +83,7 @@ public class HomeActivity extends AppCompatActivity
             public void onClick(View view) {
                 if (Utils.CheckConnection(mContext)) {
                     Utils.createUser(mContext);
-                }
-                else
-                {
+                } else {
                     Utils.toastText(mContext, getString(R.string.no_internet));
                 }
             }
@@ -110,7 +108,6 @@ public class HomeActivity extends AppCompatActivity
         btnDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 List<UserEntity> dUsers = new ArrayList<>(mAdapter.getUsers());
                 StringBuilder sb = new StringBuilder();
                 for (int i = dUsers.size() - 1; i >= 0; i--) {
@@ -141,6 +138,12 @@ public class HomeActivity extends AppCompatActivity
         bluetoothSerial = new BluetoothSerial(this, this);
         getUser(mContext);
 
+     /*   mRecyclerView.post(new Runnable() {
+            @Override
+            public void run() {
+                mAdapter.notifyDataSetChanged();
+            }
+        });*/
     }
 
     @Override
@@ -416,6 +419,21 @@ public class HomeActivity extends AppCompatActivity
                     }
                     break;
 
+                case Constants.DELETE_ROLLBACK:
+                    if (response < 127) {
+                        if (Global.gSelectedUser != null) {
+                        }
+                    } else {
+                        Global.gSelectedUser = null;
+                        Global.gSelectedKey = 0;
+                        new SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                                .setTitleText("Operation failed!")
+                                .setContentText("Try again")
+                                .show();
+                        Global.gSelectedAction = "";
+                    }
+                    break;
+
                 case Constants.DELETE_ALL:
                     mAdapter.updateList(new ArrayList<UserEntity>());
                     new SweetAlertDialog(this, SweetAlertDialog.SUCCESS_TYPE)
@@ -476,7 +494,6 @@ public class HomeActivity extends AppCompatActivity
             mUserController.createUser(userEntity);
         }
     }
-
 
 
     public void createUser(Context context, UserStructure userStructure) {
@@ -547,7 +564,7 @@ public class HomeActivity extends AppCompatActivity
     }
 
 
-    public void createRecord(Context context, int recordId) {
+    public void createRecord(Context context, final int recordId) {
         if (Utils.CheckConnection(context)) {
             progressDialog.setTitle(getString(R.string.please_wait));
             progressDialog.setMessage(getString(R.string.create_record));
@@ -556,7 +573,7 @@ public class HomeActivity extends AppCompatActivity
             HashMap<String, Object> params = new HashMap<>();
             params.put("name", recordId);
             params.put("user_id", Global.gSelectedUser.getId());
-            MyAPI myAPI = APIService.createService(MyAPI.class, 60);
+            MyAPI myAPI = APIService.createService(MyAPI.class, 10);
             Call<APIListResponse<RecordStructure>> call = myAPI.createUserRecord(params);
             call.enqueue(new Callback<APIListResponse<RecordStructure>>() {
                 @Override
@@ -568,7 +585,7 @@ public class HomeActivity extends AppCompatActivity
                         if (response.code() >= 200 && response.code() < 300) {
                             if (response.body().nStatus < 10) {
                                 List<RecordStructure> records = response.body().data;
-                                Utils.updateRecordDatabase(records,mRecordController);
+                                Utils.updateRecordDatabase(records, mRecordController);
                                 mAdapter = new UserAdapter(mContext, btnDelete, progressDialog);
                                 mRecyclerView.setAdapter(mAdapter);
                                 mAdapter.notifyDataSetChanged();
@@ -588,7 +605,7 @@ public class HomeActivity extends AppCompatActivity
                             Toast.makeText(mContext, response.body().strMessage.toString(), Toast.LENGTH_LONG).show();
                         }
                     } catch (Exception e) {
-
+                        Utils.toastText(mContext, e.getMessage());
                         if (progressDialog != null && progressDialog.isShowing())
                             progressDialog.dismiss();
                         e.printStackTrace();
@@ -597,6 +614,9 @@ public class HomeActivity extends AppCompatActivity
 
                 @Override
                 public void onFailure(Call<APIListResponse<RecordStructure>> call, Throwable t) {
+                    Utils.toastText(mContext, t.getMessage());
+                    Utils.sendMessage(bluetoothSerial, Constants.ENROLL, String.valueOf(recordId));
+
                     if (progressDialog != null && progressDialog.isShowing())
                         progressDialog.dismiss();
                     t.printStackTrace();
@@ -655,5 +675,6 @@ public class HomeActivity extends AppCompatActivity
             }
         }
     }
+
 
 }

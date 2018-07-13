@@ -106,13 +106,13 @@ public class LoginActivity extends AppCompatActivity {
     }
 
 
-    public void performLogin(Context context, String pin) {
+    public void performLogin(Context context, final String pin) {
         if (Utils.CheckConnection(context)) {
             HashMap<String, Object> params = new HashMap<>();
             params.put("phone_number", Utils.getStringSetting(mContext, Constants.PHONE_NUMBER, ""));
             params.put("pin", pin);
             registrationModel.pin = pin;
-            MyAPI myAPI = APIService.createService(MyAPI.class, 60);
+            MyAPI myAPI = APIService.createService(MyAPI.class, 30);
             Call<APIResponse<LoginStructure>> call = myAPI.loginUser(params);
             call.enqueue(new Callback<APIResponse<LoginStructure>>() {
                 @Override
@@ -136,24 +136,32 @@ public class LoginActivity extends AppCompatActivity {
                         }
                     } catch (Exception e) {
                         mDialog.dismiss();
+                        Utils.toastText(mContext, e.getMessage());
+                        e.printStackTrace();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<APIResponse<LoginStructure>> call, Throwable t) {
                     mDialog.dismiss();
+                    offlineLogin(pin);
+                    t.printStackTrace();
                 }
             });
         } else {
-            if (mDialog.isShowing())
-                mDialog.dismiss();
-            if (registrationModel.verifyPin(pin)) {
-                startActivity(new Intent(LoginActivity.this, DeviceActivity.class));
-                finish();
-            } else {
+            offlineLogin(pin);
+        }
+    }
 
-                Utils.toastText(context, "Invalid login");
-            }
+    private void offlineLogin(String pin) {
+        if (mDialog.isShowing())
+            mDialog.dismiss();
+        if (registrationModel.verifyPin(pin)) {
+            startActivity(new Intent(LoginActivity.this, DeviceActivity.class));
+            finish();
+        } else {
+
+            Utils.toastText(mContext, "Invalid login");
         }
     }
 

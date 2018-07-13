@@ -114,7 +114,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     public void onBindViewHolder(final UserAdapter.ViewHolder holder, final int position) {
         final UserEntity user = mUsers.get(position);
         holder.tvName.setText(user.getName());
-        holder.cbSelected.setChecked(user.isSelected());
+
         holder.tvIds.setText(getIds(mRecordController.getRecordsByUserId(user.getId())));
         holder.view.setBackgroundColor(Color.LTGRAY);
 
@@ -128,21 +128,16 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         holder.ll_checkbox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                if (((HomeActivity) mContext).bluetoothSerial.checkBluetooth()) {
+               //
+             /*   if (((HomeActivity) mContext).bluetoothSerial.checkBluetooth()) {
                     if (!((HomeActivity) mContext).bluetoothSerial.isConnected()) {
                         Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
                     } else {
 
-                        int key = Utils.incrementCounter(mContext, 1);
-                        Global.gSelectedKey = key;
-                        Global.gSelectedUser = user;
-                        Global.gSelectedAction = Constants.ENROLL;
-                        Utils.sendMessage(((HomeActivity) mContext).bluetoothSerial, Constants.ENROLL, String.valueOf(key));
                     }
                 } else {
                     ((HomeActivity) mContext).enableBluetooth();
-                }
+                }*/
             }
         });
 
@@ -195,6 +190,8 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
                 }
             }
         });
+
+       // holder.cbSelected.setChecked(user.isSelected());
     }
 
 
@@ -227,6 +224,8 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
             btnDelete.setVisibility(View.GONE);
         }
     }
+
+
 
     // Return the size of your dataset (invoked by the layout manager)
     @Override

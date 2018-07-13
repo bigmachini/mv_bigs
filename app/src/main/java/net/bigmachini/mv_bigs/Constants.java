@@ -12,7 +12,9 @@ public class Constants {
 
     public static final String ENROLL = "enroll";
     public static final String DELETE = "delete";
+    public static final String DELETE_ROLLBACK = "delete_rollback";
     public static final String DELETE_ALL = "off";
+
     public static final UUID BTMODULEUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); // "random" unique identifier
     public static final String PATTERN = "^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$";
 
