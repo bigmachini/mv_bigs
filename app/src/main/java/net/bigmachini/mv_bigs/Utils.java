@@ -245,6 +245,11 @@ public class Utils {
                             bluetoothSerial.write(Constants.DELETE);
                             break;
 
+
+                        case Constants.DELETE_ROLLBACK:
+                            bluetoothSerial.write(Constants.DELETE);
+                            break;
+
                         case Constants.DELETE_ALL:
                             bluetoothSerial.write(Constants.DELETE_ALL);
                             break;

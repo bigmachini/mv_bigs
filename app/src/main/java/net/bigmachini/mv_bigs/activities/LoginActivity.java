@@ -107,7 +107,7 @@ public class LoginActivity extends AppCompatActivity {
 
 
     public void performLogin(Context context, final String pin) {
-        if (Utils.CheckConnection(context)) {
+        if (Utils.CheckConnection(context) ) {
             HashMap<String, Object> params = new HashMap<>();
             params.put("phone_number", Utils.getStringSetting(mContext, Constants.PHONE_NUMBER, ""));
             params.put("pin", pin);
@@ -122,7 +122,7 @@ public class LoginActivity extends AppCompatActivity {
                         if (response.code() >= 200 && response.code() < 300) {
                             if (response.body().nStatus < 10) {
                                 Global.gLoginStructure = response.body().data;
-
+                                registrationModel.userId = Global.gLoginStructure.id;
                                 Utils.setStringSetting(mContext, Constants.REGISTRATION_MODEL, new Gson().toJson(registrationModel));
                                 startActivity(new Intent(LoginActivity.this, DeviceActivity.class));
                                 finish();
@@ -154,14 +154,24 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void offlineLogin(String pin) {
-        if (mDialog.isShowing())
-            mDialog.dismiss();
-        if (registrationModel.verifyPin(pin)) {
-            startActivity(new Intent(LoginActivity.this, DeviceActivity.class));
-            finish();
-        } else {
 
-            Utils.toastText(mContext, "Invalid login");
+        if(registrationModel.userId > 0) {
+            if (mDialog.isShowing())
+                mDialog.dismiss();
+            if (registrationModel.verifyPin(pin)) {
+                LoginStructure loginStructure = new LoginStructure();
+                loginStructure.id =registrationModel.userId;
+                Global.gLoginStructure = loginStructure;
+                startActivity(new Intent(LoginActivity.this, DeviceActivity.class));
+                finish();
+            } else {
+
+                Utils.toastText(mContext, "Invalid login");
+            }
+        }
+        else
+        {
+            Utils.toastText(mContext, getString(R.string.please_connect));
         }
     }
 

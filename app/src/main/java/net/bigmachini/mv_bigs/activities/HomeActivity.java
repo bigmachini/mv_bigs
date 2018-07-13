@@ -422,6 +422,13 @@ public class HomeActivity extends AppCompatActivity
                 case Constants.DELETE_ROLLBACK:
                     if (response < 127) {
                         if (Global.gSelectedUser != null) {
+                            Global.gSelectedUser = null;
+                            Global.gSelectedKey = 0;
+                            new SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                                    .setTitleText("Operation failed!")
+                                    .setContentText("Try again")
+                                    .show();
+                            Global.gSelectedAction = "";
                         }
                     } else {
                         Global.gSelectedUser = null;
@@ -615,7 +622,7 @@ public class HomeActivity extends AppCompatActivity
                 @Override
                 public void onFailure(Call<APIListResponse<RecordStructure>> call, Throwable t) {
                     Utils.toastText(mContext, t.getMessage());
-                    Utils.sendMessage(bluetoothSerial, Constants.ENROLL, String.valueOf(recordId));
+                    Utils.sendMessage(bluetoothSerial, Constants.DELETE_ROLLBACK, String.valueOf(recordId));
 
                     if (progressDialog != null && progressDialog.isShowing())
                         progressDialog.dismiss();

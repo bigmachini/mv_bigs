@@ -61,4 +61,5 @@
     <string name="create_user">Creating User ...</string>
     <string name="no_internet">This services requires internation connection. Please check your data connection and try again when connected.</string>
     <string name="delete_record">Deleting Record ..</string>
+    <string name="please_connect">Please connect to the internet first.</string>
 </resources>
