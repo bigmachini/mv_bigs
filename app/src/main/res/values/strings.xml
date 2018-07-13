@@ -57,4 +57,7 @@
     <string name="fetching_devices">Fetching Devices</string>
     <string name="no_users_found">No Users Found</string>
     <string name="no_record">No Records Found</string>
+    <string name="create_record">Creating Record ...</string>
+    <string name="create_user">Creating User ...</string>
+    <string name="no_internet">This services requires internation connection. Please check your data connection and try again when connected.</string>
 </resources>

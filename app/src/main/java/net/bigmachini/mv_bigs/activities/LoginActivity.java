@@ -143,7 +143,7 @@ public class LoginActivity extends AppCompatActivity {
             });
         } else {
             if (registrationModel.verifyPin(pin)) {
-                startActivity(new Intent(LoginActivity.this, HomeActivity.class));
+                startActivity(new Intent(LoginActivity.this, DeviceActivity.class));
                 finish();
             } else {
 

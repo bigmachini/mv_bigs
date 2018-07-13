@@ -9,23 +9,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import net.bigmachini.mv_bigs.Constants;
 import net.bigmachini.mv_bigs.Global;
 import net.bigmachini.mv_bigs.R;
 import net.bigmachini.mv_bigs.Utils;
-import net.bigmachini.mv_bigs.activities.DeviceIdActivity;
 import net.bigmachini.mv_bigs.db.controllers.RecordController;
 import net.bigmachini.mv_bigs.db.entities.RecordEntity;
-import net.bigmachini.mv_bigs.models.UserModel;
 
 import java.util.List;
 
 public class DeviceIdAdapter extends RecyclerView.Adapter<DeviceIdAdapter.ViewHolder> {
     private final Context mContext;
     private List<RecordEntity> mRecords;
-    UserModel userModel;
     ProgressDialog progressDialog;
     RecordController mRecordController;
 
@@ -68,28 +63,29 @@ public class DeviceIdAdapter extends RecyclerView.Adapter<DeviceIdAdapter.ViewHo
     public void onBindViewHolder(final ViewHolder holder, final int position) {
         final RecordEntity record = mRecords.get(position);
         Global.gSelectedRecord = record;
-        holder.tvName.setText(userModel.name + " : " + record.getName());
+        holder.tvName.setText(Global.gSelectedUser.getName() + " : " + record.getName());
         holder.view.setBackgroundColor(Color.LTGRAY);
         holder.ivDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (((DeviceIdActivity) mContext).bluetoothSerial.checkBluetooth()) {
-                    if (!((DeviceIdActivity) mContext).bluetoothSerial.isConnected()) {
-                        Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
-                    } else {
-                        if (progressDialog.isShowing())
-                            progressDialog.dismiss();
-                        progressDialog.setMessage("Deleting Record .. ");
-                        progressDialog.setCancelable(true);
-                        progressDialog.show();
-                        Global.gSelectedAction = Constants.DELETE;
-                        Utils.sendMessage(((DeviceIdActivity) mContext).bluetoothSerial, Constants.DELETE, mRecords.get(position).getName());
-                    }
-                } else
-
-                {
-                    ((DeviceIdActivity) mContext).enableBluetooth();
-                }
+//                if (((DeviceIdActivity) mContext).bluetoothSerial.checkBluetooth()) {
+//                    if (!((DeviceIdActivity) mContext).bluetoothSerial.isConnected()) {
+//                        Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
+//                    } else {
+//                        if (progressDialog.isShowing())
+//                            progressDialog.dismiss();
+//                        progressDialog.setMessage("Deleting Record .. ");
+//                        progressDialog.setCancelable(true);
+//                        progressDialog.show();
+//                        Global.gSelectedAction = Constants.DELETE;
+//                        Utils.sendMessage(((DeviceIdActivity) mContext).bluetoothSerial, Constants.DELETE, mRecords.get(position).getName());
+//                    }
+//                } else
+//
+//                {
+//                    ((DeviceIdActivity) mContext).enableBluetooth();
+//                }
+                Utils.toastText(mContext, "Still linking this to the server");
             }
         });
     }

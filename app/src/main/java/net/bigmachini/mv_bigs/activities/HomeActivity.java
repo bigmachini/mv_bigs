@@ -81,22 +81,9 @@ public class HomeActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-            /*    if (bluetoothSerial.checkBluetooth()) {
-                    checkBluetooth();
-                    if (!bluetoothSerial.isConnected()) {
-                        Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
-                    } else {
-                        progressDialog.setMessage("Creating User");
-                        progressDialog.setCancelable(true);
-                        progressDialog.show();
-                        Utils.createUser(mContext, progressDialog);
-                    }
-                } else {
-                    enableBluetooth();
-                }*/
-
-
-                Utils.createUser(mContext);
+                if (Utils.CheckConnection(mContext)) {
+                    Utils.createUser(mContext);
+                }
             }
         });
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -402,6 +389,7 @@ public class HomeActivity extends AppCompatActivity
         sb.append(message);
         if (sb.toString().contains(",")) {
             String res = sb.toString().trim();
+            sb = new StringBuilder();
             res = res.replace(',', ' ');
             res = res.trim();
             int response = Integer.parseInt(res);
@@ -497,7 +485,8 @@ public class HomeActivity extends AppCompatActivity
 
     public void createUser(Context context, UserStructure userStructure) {
         if (Utils.CheckConnection(context)) {
-            progressDialog.setMessage("Creating User");
+            progressDialog.setTitle(getString(R.string.please_wait));
+            progressDialog.setMessage(getString(R.string.create_user));
             progressDialog.setCancelable(true);
             progressDialog.show();
             progressDialog.show();
@@ -564,7 +553,8 @@ public class HomeActivity extends AppCompatActivity
 
     public void createRecord(Context context, int recordId) {
         if (Utils.CheckConnection(context)) {
-            progressDialog.setMessage("Creating Record");
+            progressDialog.setTitle(getString(R.string.please_wait));
+            progressDialog.setMessage(getString(R.string.create_record));
             progressDialog.setCancelable(false);
             progressDialog.show();
             HashMap<String, Object> params = new HashMap<>();
@@ -588,7 +578,7 @@ public class HomeActivity extends AppCompatActivity
                                 mAdapter.notifyDataSetChanged();
                                 new SweetAlertDialog(mContext, SweetAlertDialog.SUCCESS_TYPE)
                                         .setTitleText("SUCCESS!")
-                                        .setContentText("User: " + Global.gSelectedUser.getName() + " Added Successfully")
+                                        .setContentText("Record:Added Successfully")
                                         .show();
 
                                 if (users.size() == 0) {
@@ -617,7 +607,7 @@ public class HomeActivity extends AppCompatActivity
                 }
             });
         } else {
-
+            Utils.toastText(mContext, getString(R.string.no_internet));
             if (progressDialog != null && progressDialog.isShowing())
                 progressDialog.dismiss();
             if (mAdapter != null) {
@@ -626,6 +616,7 @@ public class HomeActivity extends AppCompatActivity
             }
         }
     }
+
     public void getUser(Context context) {
         if (Utils.CheckConnection(context)) {
             HashMap<String, Object> params = new HashMap<>();

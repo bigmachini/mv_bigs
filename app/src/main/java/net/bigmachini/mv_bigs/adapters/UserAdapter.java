@@ -202,7 +202,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         StringBuilder sb = new StringBuilder();
         sb.append("Records: ");
         for (RecordEntity recordEntity : data) {
-            sb.append(recordEntity.getId() + ", ");
+            sb.append(recordEntity.getName() + ", ");
         }
 
         return sb.toString();

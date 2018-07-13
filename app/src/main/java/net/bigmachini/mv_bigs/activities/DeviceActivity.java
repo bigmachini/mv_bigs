@@ -56,27 +56,32 @@ public class DeviceActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                new MaterialDialog.Builder(mContext)
-                        .title(R.string.attach_device)
-                        .content(R.string.enter_mac_address)
-                        .inputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS)
-                        .input(R.string.device_mac_address, R.string.empty, new MaterialDialog.InputCallback() {
-                            @Override
-                            public void onInput(MaterialDialog dialog, CharSequence input) {
+                if (Utils.CheckConnection(mContext)) {
+                    new MaterialDialog.Builder(mContext)
+                            .title(R.string.attach_device)
+                            .content(R.string.enter_mac_address)
+                            .inputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS)
+                            .input(R.string.device_mac_address, R.string.empty, new MaterialDialog.InputCallback() {
+                                @Override
+                                public void onInput(MaterialDialog dialog, CharSequence input) {
 
-                                if (validate(input.toString())) {
-                                    mDialog = new MaterialDialog.Builder(mContext)
-                                            .title(R.string.assing_mac_address)
-                                            .content(R.string.please_wait)
-                                            .progress(true, 0)
-                                            .show();
-                                    assignDevice(mContext, input.toString());
-                                } else {
-                                    Toast.makeText(mContext, "Invalid Mac Address : " + input.toString(), Toast.LENGTH_LONG).show();
+                                    if (validate(input.toString())) {
+                                        mDialog = new MaterialDialog.Builder(mContext)
+                                                .title(R.string.assing_mac_address)
+                                                .content(R.string.please_wait)
+                                                .progress(true, 0)
+                                                .show();
+                                        assignDevice(mContext, input.toString());
+                                    } else {
+                                        Toast.makeText(mContext, "Invalid Mac Address : " + input.toString(), Toast.LENGTH_LONG).show();
 
+                                    }
                                 }
-                            }
-                        }).show();
+                            }).show();
+
+                } else {
+                    Utils.toastText(mContext, getString(R.string.no_internet));
+                }
             }
         });
 
