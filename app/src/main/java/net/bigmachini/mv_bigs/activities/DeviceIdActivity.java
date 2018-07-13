@@ -63,6 +63,7 @@ public class DeviceIdActivity extends AppCompatActivity
     public BluetoothSerial bluetoothSerial;
     UserModel userModel;
     private ProgressDialog progressDialog;
+    private StringBuilder sb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,50 +71,71 @@ public class DeviceIdActivity extends AppCompatActivity
         setContentView(R.layout.activity_device_id);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
+        mContext = DeviceIdActivity.this;
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (!bluetoothSerial.isConnected()) {
-                    Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
+                if (Utils.CheckConnection(mContext)) {
+                    if (!bluetoothSerial.isConnected()) {
+                        Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
+                    } else {
+                        List<RecordEntity> records;
+                        int recordId;
+                        do {
+                            recordId = new Random().nextInt(127);
+                            records = mRecordController.getRecordByUser(String.valueOf(recordId), Global.gSelectedUser.getId());
+                        } while (records.size() > 0);
+                        Global.gSelectedKey = recordId;
+                        Utils.sendMessage(bluetoothSerial, Constants.ENROLL, String.valueOf(recordId));
+                        UserModel.saveUser(mContext, userModel);
+                    }
                 } else {
-                    List<RecordEntity> records;
-                    int recordId;
-                    do {
-                        recordId = new Random().nextInt(127);
-                        records = mRecordController.getRecordByUser(String.valueOf(recordId), Global.gSelectedUser.getId());
-                    } while (records.size() > 0);
-                    Global.gSelectedKey = recordId;
-                    Utils.sendMessage(bluetoothSerial, Constants.ENROLL, String.valueOf(recordId));
-                    UserModel.saveUser(mContext, userModel);
+                    Utils.toastText(mContext, getString(R.string.no_internet));
                 }
             }
         });
         fab.setVisibility(View.GONE);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        mContext = DeviceIdActivity.this;
-        mRecordController = new RecordController(mContext);
+        mRecordController = new
+
+                RecordController(mContext);
+
         getRecords(mContext);
-        btnDelete = findViewById(R.id.btn_delete);
+
+        btnDelete =
+
+                findViewById(R.id.btn_delete);
+
         userModel = Global.gSelectedUser1;
-        mRecyclerView = findViewById(R.id.rv_device_ids);
+        mRecyclerView =
+
+                findViewById(R.id.rv_device_ids);
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
         mRecyclerView.setHasFixedSize(true);
 
         // use a linear layout manager
-        mLayoutManager = new LinearLayoutManager(mContext);
+        mLayoutManager = new
+
+                LinearLayoutManager(mContext);
 
         mRecyclerView.setLayoutManager(mLayoutManager);
-        progressDialog = new ProgressDialog(this);
+        progressDialog = new
+
+                ProgressDialog(this);
         // specify an adapter (see also next example)
-        mAdapter = new DeviceIdAdapter(mContext, progressDialog);
+        mAdapter = new
+
+                DeviceIdAdapter(mContext, progressDialog);
         mRecyclerView.setAdapter(mAdapter);
         // Create a new instance of BluetoothSerial
-        bluetoothSerial = new BluetoothSerial(this, this);
+        bluetoothSerial = new
+
+                BluetoothSerial(this, this);
+
     }
 
     @Override
@@ -319,23 +341,20 @@ public class DeviceIdActivity extends AppCompatActivity
         if (progressDialog.isShowing())
             progressDialog.dismiss();
 
-
-        switch (Global.gSelectedAction) {
-            case Constants.DELETE:
-                if (Global.gSelectedUser1 != null) {
-                    List<UserModel> userModels = UserModel.getUsers(mContext);
-                    int indexOf = userModels.indexOf(userModel);
-                    userModels.set(indexOf, userModel);
-                    UserModel.saveList(mContext, userModels);
-                    mAdapter.notifyDataSetChanged();
-                    new SweetAlertDialog(this, SweetAlertDialog.SUCCESS_TYPE)
-                            .setTitleText("SUCCESS!")
-                            .setContentText("ID: " + Global.gSelectedKey + " Deleted Successfully")
-                            .show();
-                    Global.gSelectedKey = 0;
-                    Global.gSelectedAction = "";
-                }
-                break;
+        sb.append(message);
+        if (sb.toString().contains(",")) {
+            String res = sb.toString().trim();
+            sb = new StringBuilder();
+            res = res.replace(',', ' ');
+            res = res.trim();
+            int response = Integer.parseInt(res);
+            switch (Global.gSelectedAction) {
+                case Constants.DELETE:
+                    if (Global.gSelectedUser != null) {
+                        deleteRecord(mContext, response);
+                    }
+                    break;
+            }
         }
 
     }
@@ -428,4 +447,70 @@ public class DeviceIdActivity extends AppCompatActivity
         }
     }
 
+
+    public void deleteRecord(Context context, int recordId) {
+        if (Utils.CheckConnection(context)) {
+            if (progressDialog.isShowing())
+                progressDialog.dismiss();
+            progressDialog.setMessage(getString(R.string.delete_record));
+            progressDialog.setCancelable(true);
+            progressDialog.show();
+            HashMap<String, Object> params = new HashMap<>();
+            params.put("id", recordId);
+            params.put("user_id", Global.gSelectedUser.getId());
+            MyAPI myAPI = APIService.createService(MyAPI.class, 60);
+            Call<APIListResponse<RecordStructure>> call = myAPI.deleteRecorod(params);
+            call.enqueue(new Callback<APIListResponse<RecordStructure>>() {
+                @Override
+                public void onResponse(Call<APIListResponse<RecordStructure>> call, Response<APIListResponse<RecordStructure>> response) {
+
+                    if (progressDialog != null && progressDialog.isShowing())
+                        progressDialog.dismiss();
+                    try {
+                        if (response.code() >= 200 && response.code() < 300) {
+                            if (response.body().nStatus < 10) {
+                                List<RecordStructure> records = response.body().data;
+                                if (records.size() == 0) {
+                                    Toast.makeText(mContext, getString(R.string.no_record), Toast.LENGTH_LONG).show();
+                                }
+
+                                mAdapter.notifyDataSetChanged();
+                                new SweetAlertDialog(mContext, SweetAlertDialog.SUCCESS_TYPE)
+                                        .setTitleText("SUCCESS!")
+                                        .setContentText("ID: " + Global.gSelectedKey + " Deleted Successfully")
+                                        .show();
+                                Global.gSelectedKey = 0;
+                                Global.gSelectedAction = "";
+                            } else {
+                                Toast.makeText(mContext, getString(R.string.no_record), Toast.LENGTH_LONG).show();
+
+                            }
+                        } else {
+                            Toast.makeText(mContext, response.body().strMessage.toString(), Toast.LENGTH_LONG).show();
+                        }
+                    } catch (Exception e) {
+
+                        if (progressDialog != null && progressDialog.isShowing())
+                            progressDialog.dismiss();
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<APIListResponse<RecordStructure>> call, Throwable t) {
+                    if (progressDialog != null && progressDialog.isShowing())
+                        progressDialog.dismiss();
+                    t.printStackTrace();
+                }
+            });
+        } else {
+            Utils.toastText(mContext, getString(R.string.no_internet));
+            if (progressDialog != null && progressDialog.isShowing())
+                progressDialog.dismiss();
+            if (mAdapter != null) {
+                mAdapter = new DeviceIdAdapter(mContext, progressDialog);
+                mRecyclerView.setAdapter(mAdapter);
+            }
+        }
+    }
 }

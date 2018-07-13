@@ -84,6 +84,10 @@ public class HomeActivity extends AppCompatActivity
                 if (Utils.CheckConnection(mContext)) {
                     Utils.createUser(mContext);
                 }
+                else
+                {
+                    Utils.toastText(mContext, getString(R.string.no_internet));
+                }
             }
         });
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -473,15 +477,7 @@ public class HomeActivity extends AppCompatActivity
         }
     }
 
-    private void updateRecordDatabase(List<RecordStructure> data) {
-        for (RecordStructure recordStructure : data) {
-            RecordEntity recordEntity = new RecordEntity();
-            recordEntity.setId(recordStructure.id);
-            recordEntity.setName(recordStructure.name);
-            recordEntity.setUserId(recordStructure.userId);
-            mRecordController.createRecord(recordEntity);
-        }
-    }
+
 
     public void createUser(Context context, UserStructure userStructure) {
         if (Utils.CheckConnection(context)) {
@@ -572,7 +568,7 @@ public class HomeActivity extends AppCompatActivity
                         if (response.code() >= 200 && response.code() < 300) {
                             if (response.body().nStatus < 10) {
                                 List<RecordStructure> records = response.body().data;
-                                updateRecordDatabase(records);
+                                Utils.updateRecordDatabase(records,mRecordController);
                                 mAdapter = new UserAdapter(mContext, btnDelete, progressDialog);
                                 mRecyclerView.setAdapter(mAdapter);
                                 mAdapter.notifyDataSetChanged();

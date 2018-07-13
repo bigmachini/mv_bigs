@@ -42,6 +42,7 @@ public class LoginActivity extends AppCompatActivity {
     private MaterialDialog mDialog;
     private LoginStructure loginStructure;
     Context mContext;
+    RegistrationModel registrationModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +63,7 @@ public class LoginActivity extends AppCompatActivity {
         fab.setVisibility(View.GONE);
         btnLogin = findViewById(R.id.btn_login);
         tvForgotPassword = findViewById(R.id.tv_forgot_pin);
-        final RegistrationModel registrationModel = new Gson().fromJson(Utils.getStringSetting(mContext, Constants.REGISTRATION_MODEL, ""), RegistrationModel.class);
+        registrationModel = new Gson().fromJson(Utils.getStringSetting(mContext, Constants.REGISTRATION_MODEL, ""), RegistrationModel.class);
         tvForgotPassword.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -99,17 +100,18 @@ public class LoginActivity extends AppCompatActivity {
                         .content(R.string.please_wait)
                         .progress(true, 0)
                         .show();
-                performLogin(mContext, registrationModel, pin);
+                performLogin(mContext, pin);
             }
         });
     }
 
 
-    public void performLogin(Context context, RegistrationModel registrationModel, String pin) {
+    public void performLogin(Context context, String pin) {
         if (Utils.CheckConnection(context)) {
             HashMap<String, Object> params = new HashMap<>();
             params.put("phone_number", Utils.getStringSetting(mContext, Constants.PHONE_NUMBER, ""));
             params.put("pin", pin);
+            registrationModel.pin = pin;
             MyAPI myAPI = APIService.createService(MyAPI.class, 60);
             Call<APIResponse<LoginStructure>> call = myAPI.loginUser(params);
             call.enqueue(new Callback<APIResponse<LoginStructure>>() {
@@ -120,7 +122,8 @@ public class LoginActivity extends AppCompatActivity {
                         if (response.code() >= 200 && response.code() < 300) {
                             if (response.body().nStatus < 10) {
                                 Global.gLoginStructure = response.body().data;
-                                Utils.getStringSetting(mContext, Constants.REGISTRATION_MODEL, new Gson().toJson(response.body().data));
+
+                                Utils.setStringSetting(mContext, Constants.REGISTRATION_MODEL, new Gson().toJson(registrationModel));
                                 startActivity(new Intent(LoginActivity.this, DeviceActivity.class));
                                 finish();
                             } else {
@@ -142,6 +145,8 @@ public class LoginActivity extends AppCompatActivity {
                 }
             });
         } else {
+            if (mDialog.isShowing())
+                mDialog.dismiss();
             if (registrationModel.verifyPin(pin)) {
                 startActivity(new Intent(LoginActivity.this, DeviceActivity.class));
                 finish();

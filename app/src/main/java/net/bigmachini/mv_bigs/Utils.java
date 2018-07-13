@@ -19,12 +19,16 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.macroyau.blue2serial.BluetoothSerial;
 
 import net.bigmachini.mv_bigs.activities.HomeActivity;
+import net.bigmachini.mv_bigs.db.controllers.RecordController;
+import net.bigmachini.mv_bigs.db.entities.RecordEntity;
 import net.bigmachini.mv_bigs.db.entities.UserEntity;
+import net.bigmachini.mv_bigs.structures.RecordStructure;
 import net.bigmachini.mv_bigs.structures.UserStructure;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 
@@ -255,6 +259,16 @@ public class Utils {
 
     }
 
+
+    public static  void updateRecordDatabase(List<RecordStructure> data, RecordController mRecordController ) {
+        for (RecordStructure recordStructure : data) {
+            RecordEntity recordEntity = new RecordEntity();
+            recordEntity.setId(recordStructure.id);
+            recordEntity.setName(recordStructure.name);
+            recordEntity.setUserId(recordStructure.userId);
+            mRecordController.createRecord(recordEntity);
+        }
+    }
 
 }
 

@@ -59,4 +59,12 @@ public interface MyAPI {
     @FormUrlEncoded
     @POST("/create_record")
     Call<APIListResponse<RecordStructure>> createUserRecord(@FieldMap HashMap<String, Object> params);
+
+    @FormUrlEncoded
+    @POST("/delete_device_user")
+    Call<APIListResponse<RecordStructure>> deleteUser(@FieldMap HashMap<String, Object> params);
+
+    @FormUrlEncoded
+    @POST("/delete_record")
+    Call<APIListResponse<RecordStructure>> deleteRecorod(@FieldMap HashMap<String, Object> params);
 }
