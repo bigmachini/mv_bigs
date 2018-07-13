@@ -232,6 +232,7 @@ public class Utils {
 
 
     public static void sendMessage(final BluetoothSerial bluetoothSerial, final String action, final String key) {
+        Global.gSelectedAction = action;
         boolean check = bluetoothSerial.isConnected();
         new Thread() {
             public void run() {

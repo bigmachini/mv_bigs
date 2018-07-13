@@ -545,7 +545,7 @@ public class HomeActivity extends AppCompatActivity
                             Toast.makeText(mContext, response.body().strMessage.toString(), Toast.LENGTH_LONG).show();
                         }
                     } catch (Exception e) {
-
+                        Utils.toastText(mContext, getString(R.string.no_internet));
                         if (progressDialog != null && progressDialog.isShowing())
                             progressDialog.dismiss();
                         e.printStackTrace();
@@ -554,6 +554,7 @@ public class HomeActivity extends AppCompatActivity
 
                 @Override
                 public void onFailure(Call<APIListResponse<UserStructure>> call, Throwable t) {
+                    Utils.toastText(mContext, getString(R.string.no_internet));
                     if (progressDialog != null && progressDialog.isShowing())
                         progressDialog.dismiss();
                     t.printStackTrace();
