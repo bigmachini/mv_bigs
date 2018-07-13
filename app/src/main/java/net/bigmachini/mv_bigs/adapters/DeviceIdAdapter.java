@@ -71,24 +71,23 @@ public class DeviceIdAdapter extends RecyclerView.Adapter<DeviceIdAdapter.ViewHo
         holder.ivDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (Utils.CheckConnection(mContext)) {
-                    if (((DeviceIdActivity) mContext).bluetoothSerial.checkBluetooth()) {
-                        if (!((DeviceIdActivity) mContext).bluetoothSerial.isConnected()) {
-                            Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
-                        } else {
+                if (((DeviceIdActivity) mContext).bluetoothSerial.checkBluetooth()) {
+                    if (!((DeviceIdActivity) mContext).bluetoothSerial.isConnected()) {
+                        Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
+                    } else {
+                        if (Utils.CheckConnection(mContext)) {
                             Global.gSelectedAction = Constants.DELETE;
                             Utils.sendMessage(((DeviceIdActivity) mContext).bluetoothSerial, Constants.DELETE, mRecords.get(position).getName());
+                        } else {
+                            Utils.toastText(mContext, mContext.getString(R.string.no_internet));
                         }
-                    } else
-
-                    {
-                        ((DeviceIdActivity) mContext).enableBluetooth();
                     }
-                } else {
-                    Utils.toastText(mContext, mContext.getString(R.string.no_internet));
+                } else
+
+                {
+                    ((DeviceIdActivity) mContext).enableBluetooth();
                 }
             }
-
         });
     }
 
