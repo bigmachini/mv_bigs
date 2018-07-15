@@ -51,6 +51,12 @@ public class LoginActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         mContext = LoginActivity.this;
+        registrationModel = new Gson().fromJson(Utils.getStringSetting(mContext, Constants.REGISTRATION_MODEL, ""), RegistrationModel.class);
+
+        if (registrationModel == null) {
+            registrationModel = new RegistrationModel();
+        }
+
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -63,7 +69,6 @@ public class LoginActivity extends AppCompatActivity {
         fab.setVisibility(View.GONE);
         btnLogin = findViewById(R.id.btn_login);
         tvForgotPassword = findViewById(R.id.tv_forgot_pin);
-        registrationModel = new Gson().fromJson(Utils.getStringSetting(mContext, Constants.REGISTRATION_MODEL, ""), RegistrationModel.class);
         tvForgotPassword.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -107,7 +112,7 @@ public class LoginActivity extends AppCompatActivity {
 
 
     public void performLogin(Context context, final String pin) {
-        if (Utils.CheckConnection(context) ) {
+        if (Utils.CheckConnection(context)) {
             HashMap<String, Object> params = new HashMap<>();
             params.put("phone_number", Utils.getStringSetting(mContext, Constants.PHONE_NUMBER, ""));
             params.put("pin", pin);
@@ -155,12 +160,12 @@ public class LoginActivity extends AppCompatActivity {
 
     private void offlineLogin(String pin) {
 
-        if(registrationModel.userId > 0) {
+        if (registrationModel.userId > 0) {
             if (mDialog.isShowing())
                 mDialog.dismiss();
             if (registrationModel.verifyPin(pin)) {
                 LoginStructure loginStructure = new LoginStructure();
-                loginStructure.id =registrationModel.userId;
+                loginStructure.id = registrationModel.userId;
                 Global.gLoginStructure = loginStructure;
                 startActivity(new Intent(LoginActivity.this, DeviceActivity.class));
                 finish();
@@ -168,9 +173,7 @@ public class LoginActivity extends AppCompatActivity {
 
                 Utils.toastText(mContext, "Invalid login");
             }
-        }
-        else
-        {
+        } else {
             Utils.toastText(mContext, getString(R.string.please_connect));
         }
     }
