@@ -15,6 +15,11 @@ public interface DeviceDAO {
     @Query("SELECT * FROM device_table WHERE id =:id")
     List<DeviceEntity> getDevicesById(int id);
 
+
+    @Query("SELECT * FROM device_table WHERE mac_address=:macAddress")
+    List<DeviceEntity> getDeviceByMacAddress(String macAddress);
+
+
     @Query("SELECT * FROM device_table")
     List<DeviceEntity> getAll();
 

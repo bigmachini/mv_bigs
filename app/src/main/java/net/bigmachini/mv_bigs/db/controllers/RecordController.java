@@ -31,6 +31,9 @@ public class RecordController extends BaseController {
     public void deleteById(int RecordId) {
         mRecordDao.deleteById(RecordId);
     }
+    public void deleteByName(String name) {
+        mRecordDao.deleteByName(name);
+    }
 
 
     public int getCount() {

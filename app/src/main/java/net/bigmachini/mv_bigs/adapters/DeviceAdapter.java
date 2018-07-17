@@ -64,6 +64,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
             @Override
             public void onClick(View v) {
                 Global.gSelectedDevice = device;
+                Global.gDevice = null;
                 mContext.startActivity(new Intent(mContext, HomeActivity.class));
             }
         });

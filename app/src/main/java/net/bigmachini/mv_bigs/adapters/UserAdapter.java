@@ -10,7 +10,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -114,40 +113,38 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     public void onBindViewHolder(final UserAdapter.ViewHolder holder, final int position) {
         final UserEntity user = mUsers.get(position);
         holder.tvName.setText(user.getName());
-
+        holder.cbSelected.setChecked(user.isSelected());
         holder.tvIds.setText(getIds(mRecordController.getRecordsByUserId(user.getId())));
         holder.view.setBackgroundColor(Color.LTGRAY);
 
         holder.ll_checkbox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                holder.cbSelected.setChecked(!holder.cbSelected.isChecked());
+                if (!checkDeviceRecords(user.getId())) {
+                    holder.cbSelected.setChecked(!holder.cbSelected.isChecked());
+                    user.setSelected(!holder.cbSelected.isChecked());
+                    holder.view.setBackgroundColor(user.isSelected() ? Color.CYAN : Color.LTGRAY);
+                    mUserController.createUser(user);
+                    updateList();
+                } else {
+                    Utils.toastText(mContext, mContext.getString(R.string.delete_records));
+                }
             }
         });
 
-        holder.ll_checkbox.setOnClickListener(new View.OnClickListener() {
+        holder.cbSelected.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               //
-             /*   if (((HomeActivity) mContext).bluetoothSerial.checkBluetooth()) {
-                    if (!((HomeActivity) mContext).bluetoothSerial.isConnected()) {
-                        Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
-                    } else {
 
-                    }
+                if (!checkDeviceRecords(user.getId())) {
+                    holder.cbSelected.setChecked(!holder.cbSelected.isChecked());
+                    user.setSelected(!holder.cbSelected.isChecked());
+                    holder.view.setBackgroundColor(user.isSelected() ? Color.CYAN : Color.LTGRAY);
+                    mUserController.createUser(user);
+                    updateList();
                 } else {
-                    ((HomeActivity) mContext).enableBluetooth();
-                }*/
-            }
-        });
-
-        holder.cbSelected.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                user.setSelected(isChecked);
-                holder.view.setBackgroundColor(user.isSelected() ? Color.CYAN : Color.LTGRAY);
-                mUserController.createUser(user);
-                updateList();
+                    Utils.toastText(mContext, mContext.getString(R.string.delete_records));
+                }
             }
         });
 
@@ -163,37 +160,51 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         holder.ivAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (((HomeActivity) mContext).bluetoothSerial.checkBluetooth()) {
+                if (Utils.CheckConnection(mContext)) {
+                    if (((HomeActivity) mContext).bluetoothSerial.checkBluetooth()) {
 
-                    if (!((HomeActivity) mContext).bluetoothSerial.isConnected()) {
-                        Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
+                        if (!((HomeActivity) mContext).bluetoothSerial.isConnected()) {
+                            Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
+                        } else {
+                            List<RecordEntity> records;
+                            int recordId;
+                            Global.gSelectedUser = user;
+                            do {
+                                recordId = new Random().nextInt(127);
+                                records = mRecordController.getRecordByUser(String.valueOf(recordId), Global.gSelectedUser.getId());
+                            } while (records.size() > 0);
+                            if (progressDialog.isShowing())
+                                progressDialog.dismiss();
+                            progressDialog.setMessage("Adding Record .. ");
+                            progressDialog.setCancelable(true);
+                            progressDialog.show();
+                            Global.gSelectedKey = recordId;
+
+                            Global.gSelectedAction = Constants.ENROLL;
+                            Utils.sendMessage(((HomeActivity) mContext).bluetoothSerial, Constants.ENROLL, String.valueOf(recordId));
+                        }
                     } else {
-                        List<RecordEntity> records;
-                        int recordId;
-                        Global.gSelectedUser = user;
-                        do {
-                            recordId = new Random().nextInt(127);
-                            records = mRecordController.getRecordByUser(String.valueOf(recordId), Global.gSelectedUser.getId());
-                        } while (records.size() > 0);
-                        if (progressDialog.isShowing())
-                            progressDialog.dismiss();
-                        progressDialog.setMessage("Adding Record .. ");
-                        progressDialog.setCancelable(true);
-                        progressDialog.show();
-                        Global.gSelectedKey = recordId;
-
-                        Global.gSelectedAction = Constants.ENROLL;
-                        Utils.sendMessage(((HomeActivity) mContext).bluetoothSerial, Constants.ENROLL, String.valueOf(recordId));
+                        ((HomeActivity) mContext).enableBluetooth();
                     }
                 } else {
-                    ((HomeActivity) mContext).enableBluetooth();
+                    Utils.toastText(mContext, mContext.getString(R.string.no_internet));
+                    if (progressDialog != null && progressDialog.isShowing())
+                        progressDialog.dismiss();
                 }
+
             }
         });
 
-       // holder.cbSelected.setChecked(user.isSelected());
+
     }
 
+    private boolean checkDeviceRecords(int userID) {
+        if (mRecordController.getRecordsByUserId(userID).size() > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
     public String getIds(List<RecordEntity> data) {
         StringBuilder sb = new StringBuilder();
@@ -224,7 +235,6 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
             btnDelete.setVisibility(View.GONE);
         }
     }
-
 
 
     // Return the size of your dataset (invoked by the layout manager)

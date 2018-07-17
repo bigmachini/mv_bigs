@@ -141,7 +141,6 @@ public class LoginActivity extends AppCompatActivity {
                         }
                     } catch (Exception e) {
                         mDialog.dismiss();
-                        Utils.toastText(mContext, e.getMessage());
                         e.printStackTrace();
                     }
                 }

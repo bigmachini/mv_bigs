@@ -14,8 +14,8 @@ android {
         applicationId "net.bigmachini.mv_bigs"
         minSdkVersion 18
         targetSdkVersion 27
-        versionCode 4
-        versionName "2.4"
+        versionCode 7
+        versionName "2.7"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

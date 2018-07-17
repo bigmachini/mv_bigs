@@ -35,4 +35,7 @@ public interface RecordDAO {
 
     @Query("DELETE  FROM record_table WHERE id=:id")
     void deleteById(int id);
+
+    @Query("DELETE  FROM record_table WHERE name=:name")
+    void deleteByName(String name);
 }

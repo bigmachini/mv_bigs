@@ -15,6 +15,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -72,6 +73,7 @@ public class DeviceIdActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         mContext = DeviceIdActivity.this;
+        sb = new StringBuilder();
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -343,7 +345,8 @@ public class DeviceIdActivity extends AppCompatActivity
 
         sb.append(message);
         if (sb.toString().contains(",")) {
-            String res = sb.toString().trim();
+            Log.e("TAG", "message: " + sb.toString());
+            String res = sb.toString().trim().replace("enroll","").replace("empty","");
             sb = new StringBuilder();
             res = res.replace(',', ' ');
             res = res.trim();
@@ -361,6 +364,8 @@ public class DeviceIdActivity extends AppCompatActivity
 
     @Override
     public void onBluetoothSerialWrite(String message) {
+
+        Log.e("TAG", "message out: " + message);
         // Print the outgoing message on the terminal screen
 //        tvTerminal.append(getString(R.string.terminal_message_template,
 //                bluetoothSerial.getLocalAdapterName(),
@@ -448,7 +453,7 @@ public class DeviceIdActivity extends AppCompatActivity
     }
 
 
-    public void deleteRecord(Context context, int recordId) {
+    public void deleteRecord(Context context, final int recordId) {
         if (Utils.CheckConnection(context)) {
             if (progressDialog.isShowing())
                 progressDialog.dismiss();
@@ -473,7 +478,9 @@ public class DeviceIdActivity extends AppCompatActivity
                                 if (records.size() == 0) {
                                     Toast.makeText(mContext, getString(R.string.no_record), Toast.LENGTH_LONG).show();
                                 }
-
+                                mRecordController.deleteByName(String.valueOf(recordId));
+                                mAdapter = new DeviceIdAdapter(mContext, progressDialog);
+                                mRecyclerView.setAdapter(mAdapter);
                                 mAdapter.notifyDataSetChanged();
                                 new SweetAlertDialog(mContext, SweetAlertDialog.SUCCESS_TYPE)
                                         .setTitleText("SUCCESS!")

@@ -71,21 +71,30 @@ public class DeviceIdAdapter extends RecyclerView.Adapter<DeviceIdAdapter.ViewHo
         holder.ivDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (((DeviceIdActivity) mContext).bluetoothSerial.checkBluetooth()) {
-                    if (!((DeviceIdActivity) mContext).bluetoothSerial.isConnected()) {
-                        Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
-                    } else {
-                        if (Utils.CheckConnection(mContext)) {
-                            Global.gSelectedAction = Constants.DELETE;
-                            Utils.sendMessage(((DeviceIdActivity) mContext).bluetoothSerial, Constants.DELETE, mRecords.get(position).getName());
+                if (Utils.CheckConnection(mContext)) {
+                    if (((DeviceIdActivity) mContext).bluetoothSerial.checkBluetooth()) {
+                        if (!((DeviceIdActivity) mContext).bluetoothSerial.isConnected()) {
+                            Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
                         } else {
-                            Utils.toastText(mContext, mContext.getString(R.string.no_internet));
-                        }
-                    }
-                } else
+                            if (Utils.CheckConnection(mContext)) {
 
-                {
-                    ((DeviceIdActivity) mContext).enableBluetooth();
+                                Global.gSelectedAction = Constants.DELETE;
+                                Global.gSelectedKey =  Integer.parseInt(mRecords.get(position).getName());
+                                Utils.sendMessage(((DeviceIdActivity) mContext).bluetoothSerial, Constants.DELETE, mRecords.get(position).getName());
+                            } else {
+                                Utils.toastText(mContext, mContext.getString(R.string.no_internet));
+                            }
+                        }
+                    } else
+
+                    {
+                        ((DeviceIdActivity) mContext).enableBluetooth();
+                    }
+
+                } else {
+                    Utils.toastText(mContext, mContext.getString(R.string.no_internet));
+                    if (progressDialog != null && progressDialog.isShowing())
+                        progressDialog.dismiss();
                 }
             }
         });

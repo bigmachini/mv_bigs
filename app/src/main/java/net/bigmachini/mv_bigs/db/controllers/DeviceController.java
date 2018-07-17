@@ -20,6 +20,10 @@ public class DeviceController extends BaseController {
         return mDeviceDao.getDevicesById(deviceId);
     }
 
+    public List<DeviceEntity> getDeviceByMacAddress(String macAddress) {
+        return mDeviceDao.getDeviceByMacAddress(macAddress);
+    }
+
     public List<DeviceEntity> getAllDevices() {
         return mDeviceDao.getAll();
     }

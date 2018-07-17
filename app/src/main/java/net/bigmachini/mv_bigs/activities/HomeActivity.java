@@ -15,6 +15,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,6 +32,7 @@ import net.bigmachini.mv_bigs.Global;
 import net.bigmachini.mv_bigs.R;
 import net.bigmachini.mv_bigs.Utils;
 import net.bigmachini.mv_bigs.adapters.UserAdapter;
+import net.bigmachini.mv_bigs.db.controllers.DeviceController;
 import net.bigmachini.mv_bigs.db.controllers.RecordController;
 import net.bigmachini.mv_bigs.db.controllers.UserController;
 import net.bigmachini.mv_bigs.db.entities.RecordEntity;
@@ -67,6 +69,7 @@ public class HomeActivity extends AppCompatActivity
     ProgressDialog progressDialog;
     private UserController mUserController;
     private RecordController mRecordController;
+    private DeviceController mDeviceController;
     private ScrollView svTerminal;
     static StringBuilder sb = new StringBuilder();
 
@@ -88,11 +91,14 @@ public class HomeActivity extends AppCompatActivity
                 }
             }
         });
+
+        fab.setVisibility(View.INVISIBLE);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mContext = HomeActivity.this;
         btnDelete = findViewById(R.id.btn_delete);
         mUserController = new UserController(mContext);
+        mDeviceController = new DeviceController(mContext);
         mRecordController = new RecordController(mContext);
         mRecyclerView = findViewById(R.id.rv_users);
         svTerminal = findViewById(R.id.sv_terminal);
@@ -232,6 +238,14 @@ public class HomeActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
+        if (id == R.id.action_create_user) {
+            if (Utils.CheckConnection(mContext)) {
+                Utils.createUser(mContext);
+            } else {
+                Utils.toastText(mContext, getString(R.string.no_internet));
+            }
+            return true;
+        }
         if (id == R.id.action_connect) {
             showDeviceListDialog();
             return true;
@@ -395,34 +409,22 @@ public class HomeActivity extends AppCompatActivity
     public void onBluetoothSerialRead(String message) {
         sb.append(message);
         if (sb.toString().contains(",")) {
-            String res = sb.toString().trim();
+            Log.e("TAG", "message: " + sb.toString());
+            String res = sb.toString().trim().replace("enroll", "").replace("empty", "");
             sb = new StringBuilder();
             res = res.replace(',', ' ');
             res = res.trim();
-            int response = Integer.parseInt(res);
-            if (progressDialog.isShowing())
-                progressDialog.dismiss();
-            switch (Global.gSelectedAction) {
-                case Constants.ENROLL:
-                    if (response < 127) {
-                        if (Global.gSelectedUser != null) {
-                            createRecord(mContext, response);
-                        }
-                    } else {
-                        Global.gSelectedUser = null;
-                        Global.gSelectedKey = 0;
-                        new SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
-                                .setTitleText("Operation failed!")
-                                .setContentText("Try again")
-                                .show();
-                        Global.gSelectedAction = "";
-                    }
-                    break;
-
-                case Constants.DELETE_ROLLBACK:
-                    if (response < 127) {
-                        if (Global.gSelectedUser != null) {
-                            Global.gSelectedUser = null;
+            try {
+                int response = Integer.parseInt(res);
+                if (progressDialog.isShowing())
+                    progressDialog.dismiss();
+                switch (Global.gSelectedAction) {
+                    case Constants.ENROLL:
+                        if (response < 127) {
+                            if (Global.gSelectedUser != null) {
+                                createRecord(mContext, response);
+                            }
+                        } else {
                             Global.gSelectedKey = 0;
                             new SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
                                     .setTitleText("Operation failed!")
@@ -430,38 +432,62 @@ public class HomeActivity extends AppCompatActivity
                                     .show();
                             Global.gSelectedAction = "";
                         }
-                    } else {
+                        break;
+
+                    case Constants.DELETE_ROLLBACK:
+                        if (response < 127) {
+                            if (Global.gSelectedUser != null) {
+                                Global.gSelectedUser = null;
+                                Global.gSelectedKey = 0;
+                                new SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                                        .setTitleText("Success!")
+                                        .setContentText(getString(R.string.roll_back))
+                                        .show();
+                                Global.gSelectedAction = "";
+                            }
+                        } else {
+                            Global.gSelectedKey = 0;
+                            new SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                                    .setTitleText("Operation failed!")
+                                    .setContentText("Try again")
+                                    .show();
+                            Global.gSelectedAction = "";
+                        }
+                        break;
+
+                    case Constants.DELETE_ALL:
+                        mAdapter.updateList(new ArrayList<UserEntity>());
+                        new SweetAlertDialog(this, SweetAlertDialog.SUCCESS_TYPE)
+                                .setTitleText("SUCCESS!")
+                                .setContentText("Delete Successful")
+                                .show();
+                        progressDialog.dismiss();
                         Global.gSelectedUser = null;
                         Global.gSelectedKey = 0;
-                        new SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
-                                .setTitleText("Operation failed!")
-                                .setContentText("Try again")
-                                .show();
-                        Global.gSelectedAction = "";
-                    }
-                    break;
+                        Utils.setIntSetting(mContext, Constants.COUNTER, 0);
+                        break;
 
-                case Constants.DELETE_ALL:
-                    mAdapter.updateList(new ArrayList<UserEntity>());
-                    new SweetAlertDialog(this, SweetAlertDialog.SUCCESS_TYPE)
-                            .setTitleText("SUCCESS!")
-                            .setContentText("Delete Successful")
-                            .show();
+                    default:
+                        break;
+                }
+            } catch (Exception e) {
+                if (progressDialog.isShowing())
                     progressDialog.dismiss();
-                    Global.gSelectedUser = null;
-                    Global.gSelectedKey = 0;
-                    Utils.setIntSetting(mContext, Constants.COUNTER, 0);
-                    break;
-
-                default:
-                    break;
+                sb = new StringBuilder();
+                new SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                        .setTitleText("Operation failed!")
+                        .setContentText("Try again")
+                        .show();
             }
             Global.gSelectedAction = "";
         }
+
     }
 
     @Override
     public void onBluetoothSerialWrite(String message) {
+
+        Log.e("TAG", "message out: " + message);
         // Print the outgoing message on the terminal screen
 //        tvTerminal.append(getString(R.string.terminal_message_template,
 //                bluetoothSerial.getLocalAdapterName(),
@@ -478,7 +504,11 @@ public class HomeActivity extends AppCompatActivity
             progressDialog.dismiss();
         Global.gDevice = device;
         Global.gAddress = device.getAddress();
-        bluetoothSerial.connect(device);
+        if (mDeviceController.getDeviceByMacAddress(device.getAddress()).size() > 0) {
+            bluetoothSerial.connect(device);
+        } else {
+            Utils.toastText(mContext, getString(R.string.mac_address_invalid));
+        }
     }
 
     /* End of the implementation of listeners */
@@ -525,7 +555,11 @@ public class HomeActivity extends AppCompatActivity
                         if (response.code() >= 200 && response.code() < 300) {
                             if (response.body().nStatus < 10) {
                                 List<UserStructure> users = response.body().data;
-                                updateDatabase(users);
+                                if (users == null || users.size() == 0) {
+                                    Toast.makeText(mContext, getString(R.string.no_users_found), Toast.LENGTH_LONG).show();
+                                } else {
+                                    updateDatabase(users);
+                                }
                                 mAdapter = new UserAdapter(mContext, btnDelete, progressDialog);
                                 mRecyclerView.setAdapter(mAdapter);
                                 mAdapter.notifyDataSetChanged();
@@ -533,19 +567,13 @@ public class HomeActivity extends AppCompatActivity
                                         .setTitleText("SUCCESS!")
                                         .setContentText("User: " + Global.gSelectedUser.getName() + " Added Successfully")
                                         .show();
-
-                                if (users.size() == 0) {
-                                    Toast.makeText(mContext, getString(R.string.no_users_found), Toast.LENGTH_LONG).show();
-                                }
                             } else {
                                 Toast.makeText(mContext, getString(R.string.no_users_found), Toast.LENGTH_LONG).show();
-
                             }
                         } else {
                             Toast.makeText(mContext, response.body().strMessage.toString(), Toast.LENGTH_LONG).show();
                         }
                     } catch (Exception e) {
-                        Utils.toastText(mContext, getString(R.string.no_internet));
                         if (progressDialog != null && progressDialog.isShowing())
                             progressDialog.dismiss();
                         e.printStackTrace();
@@ -561,7 +589,6 @@ public class HomeActivity extends AppCompatActivity
                 }
             });
         } else {
-
             if (progressDialog != null && progressDialog.isShowing())
                 progressDialog.dismiss();
             if (mAdapter != null) {
@@ -602,18 +629,16 @@ public class HomeActivity extends AppCompatActivity
                                         .setContentText("Record:Added Successfully")
                                         .show();
 
-                                if (users.size() == 0) {
-                                    Toast.makeText(mContext, getString(R.string.no_users_found), Toast.LENGTH_LONG).show();
-                                }
+
                             } else {
-                                Toast.makeText(mContext, getString(R.string.no_users_found), Toast.LENGTH_LONG).show();
+                                Utils.sendMessage(bluetoothSerial, Constants.DELETE_ROLLBACK, String.valueOf(recordId));
 
                             }
                         } else {
-                            Toast.makeText(mContext, response.body().strMessage.toString(), Toast.LENGTH_LONG).show();
+                            Utils.sendMessage(bluetoothSerial, Constants.DELETE_ROLLBACK, String.valueOf(recordId));
                         }
                     } catch (Exception e) {
-                        Utils.toastText(mContext, e.getMessage());
+                        Utils.sendMessage(bluetoothSerial, Constants.DELETE_ROLLBACK, String.valueOf(recordId));
                         if (progressDialog != null && progressDialog.isShowing())
                             progressDialog.dismiss();
                         e.printStackTrace();
@@ -627,6 +652,11 @@ public class HomeActivity extends AppCompatActivity
 
                     if (progressDialog != null && progressDialog.isShowing())
                         progressDialog.dismiss();
+
+                    progressDialog.setTitle(getString(R.string.please_wait));
+                    progressDialog.setMessage(getString(R.string.delete_record));
+                    progressDialog.setCancelable(false);
+                    progressDialog.show();
                     t.printStackTrace();
                 }
             });

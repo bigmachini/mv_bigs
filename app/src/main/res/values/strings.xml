@@ -62,4 +62,8 @@
     <string name="no_internet">This services requires internation connection. Please check your data connection and try again when connected.</string>
     <string name="delete_record">Deleting Record ..</string>
     <string name="please_connect">Please connect to the internet first.</string>
+    <string name="action_create_user">Create User</string>
+    <string name="mac_address_invalid">This device is not assigned to you</string>
+    <string name="delete_records">Delete User records first</string>
+    <string name="roll_back">Rollback Successful</string>
 </resources>
