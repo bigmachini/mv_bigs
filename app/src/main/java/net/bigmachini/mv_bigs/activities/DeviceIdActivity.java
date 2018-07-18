@@ -455,11 +455,7 @@ public class DeviceIdActivity extends AppCompatActivity
 
     public void deleteRecord(Context context, final int recordId) {
         if (Utils.CheckConnection(context)) {
-            if (progressDialog.isShowing())
-                progressDialog.dismiss();
-            progressDialog.setMessage(getString(R.string.delete_record));
-            progressDialog.setCancelable(true);
-            progressDialog.show();
+
             HashMap<String, Object> params = new HashMap<>();
             params.put("id", recordId);
             params.put("user_id", Global.gSelectedUser.getId());

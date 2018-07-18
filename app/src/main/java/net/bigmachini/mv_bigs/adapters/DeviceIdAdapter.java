@@ -77,9 +77,13 @@ public class DeviceIdAdapter extends RecyclerView.Adapter<DeviceIdAdapter.ViewHo
                             Toast.makeText(mContext, "Please connect to device", Toast.LENGTH_LONG).show();
                         } else {
                             if (Utils.CheckConnection(mContext)) {
-
                                 Global.gSelectedAction = Constants.DELETE;
                                 Global.gSelectedKey =  Integer.parseInt(mRecords.get(position).getName());
+                                if (progressDialog.isShowing())
+                                    progressDialog.dismiss();
+                                progressDialog.setMessage(mContext.getString(R.string.delete_record));
+                                progressDialog.setCancelable(true);
+                                progressDialog.show();
                                 Utils.sendMessage(((DeviceIdActivity) mContext).bluetoothSerial, Constants.DELETE, mRecords.get(position).getName());
                             } else {
                                 Utils.toastText(mContext, mContext.getString(R.string.no_internet));
