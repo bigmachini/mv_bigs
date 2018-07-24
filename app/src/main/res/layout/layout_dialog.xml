@@ -4,6 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     android:orientation="vertical"
+    android:padding="16dp"
     android:layout_height="match_parent">
 
     <EditText
@@ -12,7 +13,7 @@
         android:hint="@string/device_mac_address"
         android:layout_height="wrap_content"
         android:id="@+id/edt_mac_address"
-        android:inputType="textCapCharacters|numberSigned"/>
+        android:inputType="textCapCharacters|text"/>
 
     <EditText
         android:layout_width="match_parent"
@@ -20,7 +21,7 @@
         android:layout_height="wrap_content"
         android:hint="@string/device_serial_no"
         android:id="@+id/edt_serial"
-        android:inputType="textCapCharacters|numberSigned"/>
+        android:inputType="textCapCharacters|text"/>
 
     <Button
         android:layout_width="match_parent"

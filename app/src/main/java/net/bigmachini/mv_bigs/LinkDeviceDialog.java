@@ -64,9 +64,9 @@ public class LinkDeviceDialog extends DialogFragment {
                 return;
             }
 
-            String serialNo = edtMacAddress.getText().toString().trim();
+            String serialNo = edtSerial.getText().toString().trim();
             if (serialNo.isEmpty() || serialNo == null || serialNo.length() == 0) {
-                edtMacAddress.setError(getString(R.string.invalid_serial_no));
+                edtSerial.setError(getString(R.string.invalid_serial_no));
                 return;
             }
 
@@ -96,6 +96,7 @@ public class LinkDeviceDialog extends DialogFragment {
                     .show();
             HashMap<String, Object> params = new HashMap<>();
             params.put("mac_address", macAddress);
+            params.put("serial_no", SerialNo);
             params.put("id", Global.gLoginStructure.id);
             MyAPI myAPI = APIService.createService(MyAPI.class, 60);
             Call<APIListResponse<DeviceStructure>> call = myAPI.assignDevice(params);
@@ -103,6 +104,7 @@ public class LinkDeviceDialog extends DialogFragment {
                 @Override
                 public void onResponse(Call<APIListResponse<DeviceStructure>> call, Response<APIListResponse<DeviceStructure>> response) {
                     mDialog.dismiss();
+                    dismiss();
                     try {
                         if (response.code() >= 200 && response.code() < 300) {
                             if (response.body().nStatus < 10) {
