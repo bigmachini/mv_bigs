@@ -38,12 +38,14 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
         // each data item is just a string in this case
         TextView tvMacAddress;
         TextView tvStatus;
+        TextView tvSerialNo;
         LinearLayout linearLayout;
 
         public ViewHolder(View view) {
             super(view);
             tvMacAddress = view.findViewById(R.id.tv_mac_address);
             tvStatus = view.findViewById(R.id.tv_status);
+            tvSerialNo = view.findViewById(R.id.tv_serial_no);
             linearLayout = view.findViewById(R.id.layout);
         }
     }
@@ -71,6 +73,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
 
         holder.tvMacAddress.setText(device.getMacAddress());
         holder.tvStatus.setText(device.getStatus().toString());
+        holder.tvSerialNo.setText(device.getSerialNo());
     }
 
     // Return the size of your dataset (invoked by the layout manager)

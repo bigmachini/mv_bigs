@@ -21,6 +21,10 @@ public class DeviceEntity {
     @Expose
     private String macAddress;
 
+    @ColumnInfo(name = "serial_no")
+    @Expose
+    private String serialNo;
+
 
     @ColumnInfo(name = "status")
     @Expose
@@ -50,6 +54,14 @@ public class DeviceEntity {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getSerialNo() {
+        return serialNo;
+    }
+
+    public void setSerialNo(String serialNo) {
+        this.serialNo = serialNo;
     }
 
     // Need this empty constructor for the database (SugarORM)

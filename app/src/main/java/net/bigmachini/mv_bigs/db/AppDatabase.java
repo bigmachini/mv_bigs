@@ -16,7 +16,7 @@ import net.bigmachini.mv_bigs.db.entities.RecordEntity;
 import net.bigmachini.mv_bigs.db.entities.UserEntity;
 
 
-@Database(entities = {DeviceEntity.class, UserEntity.class, RecordEntity.class}, version = 3, exportSchema = false)
+@Database(entities = {DeviceEntity.class, UserEntity.class, RecordEntity.class}, version = 4, exportSchema = false)
 @TypeConverters(DateConverter.class)
 public abstract class AppDatabase extends RoomDatabase {
 

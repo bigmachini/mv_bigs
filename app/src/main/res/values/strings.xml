@@ -66,4 +66,7 @@
     <string name="mac_address_invalid">This device is not assigned to you</string>
     <string name="delete_records">Delete User records first</string>
     <string name="roll_back">Rollback Successful</string>
+    <string name="link_device">Link Device</string>
+    <string name="device_serial_no">Serial No</string>
+    <string name="invalid_serial_no">Invalid Serial No</string>
 </resources>

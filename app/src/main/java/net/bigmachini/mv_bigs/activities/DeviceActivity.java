@@ -3,11 +3,11 @@ package net.bigmachini.mv_bigs.activities;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.text.InputType;
 import android.view.View;
 import android.widget.Toast;
 
@@ -15,6 +15,7 @@ import com.afollestad.materialdialogs.MaterialDialog;
 
 import net.bigmachini.mv_bigs.Constants;
 import net.bigmachini.mv_bigs.Global;
+import net.bigmachini.mv_bigs.LinkDeviceDialog;
 import net.bigmachini.mv_bigs.R;
 import net.bigmachini.mv_bigs.Utils;
 import net.bigmachini.mv_bigs.adapters.DeviceAdapter;
@@ -37,12 +38,12 @@ import retrofit2.Response;
 public class DeviceActivity extends AppCompatActivity {
 
 
-    RecyclerView rvDevices;
+    public RecyclerView rvDevices;
     DeviceController mDeviceController;
     Context mContext;
-    private LinearLayoutManager mLayoutManager;
-    private DeviceAdapter mAdapter;
-    private MaterialDialog mDialog;
+    public LinearLayoutManager mLayoutManager;
+    public DeviceAdapter mAdapter;
+    public MaterialDialog mDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +58,7 @@ public class DeviceActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if (Utils.CheckConnection(mContext)) {
-                    new MaterialDialog.Builder(mContext)
+                /*    new MaterialDialog.Builder(mContext)
                             .title(R.string.attach_device)
                             .content(R.string.enter_mac_address)
                             .inputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS)
@@ -77,7 +78,11 @@ public class DeviceActivity extends AppCompatActivity {
 
                                     }
                                 }
-                            }).show();
+                            }).show();*/
+
+                    FragmentManager fm = getSupportFragmentManager();
+                    LinkDeviceDialog custom = LinkDeviceDialog.newInstance();
+                    custom.show(fm,"");
 
                 } else {
                     Utils.toastText(mContext, getString(R.string.no_internet));
@@ -174,65 +179,16 @@ public class DeviceActivity extends AppCompatActivity {
         }
     }
 
-    private void updateDatabase(List<DeviceStructure> data) {
+    public void updateDatabase(List<DeviceStructure> data) {
         for (DeviceStructure deviceStructure : data) {
             DeviceEntity deviceEntity = new DeviceEntity();
             deviceEntity.setId(deviceStructure.id);
             deviceEntity.setMacAddress(deviceStructure.macAddress);
             deviceEntity.setStatus(deviceStructure.status);
+            deviceEntity.setSerialNo(deviceStructure.serialNo);
             mDeviceController.createDevice(deviceEntity);
         }
     }
 
-    public void assignDevice(Context context, String macAddress) {
-        if (Utils.CheckConnection(context)) {
-            HashMap<String, Object> params = new HashMap<>();
-            params.put("mac_address", macAddress);
-            params.put("id", Global.gLoginStructure.id);
-            MyAPI myAPI = APIService.createService(MyAPI.class, 60);
-            Call<APIListResponse<DeviceStructure>> call = myAPI.assignDevice(params);
-            call.enqueue(new Callback<APIListResponse<DeviceStructure>>() {
-                @Override
-                public void onResponse(Call<APIListResponse<DeviceStructure>> call, Response<APIListResponse<DeviceStructure>> response) {
-                    mDialog.dismiss();
-                    try {
-                        if (response.code() >= 200 && response.code() < 300) {
-                            if (response.body().nStatus < 10) {
-                                List<DeviceStructure> devices = response.body().data;
-                                updateDatabase(devices);
-                                mAdapter = new DeviceAdapter(mContext);
-                                rvDevices.setAdapter(mAdapter);
-                                mAdapter.notifyDataSetChanged();
 
-                                if (devices.size() == 0) {
-                                    Toast.makeText(mContext, getString(R.string.no_device_found), Toast.LENGTH_LONG).show();
-                                }
-                            } else {
-                                Toast.makeText(mContext, getString(R.string.no_device_found), Toast.LENGTH_LONG).show();
-
-                            }
-                        } else {
-                            mDialog.dismiss();
-                            Toast.makeText(mContext, response.body().strMessage.toString(), Toast.LENGTH_LONG).show();
-                        }
-                    } catch (Exception e) {
-                        mDialog.dismiss();
-                        e.printStackTrace();
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<APIListResponse<DeviceStructure>> call, Throwable t) {
-                    mDialog.dismiss();
-                    t.printStackTrace();
-                }
-            });
-        } else {
-            mDialog.dismiss();
-            if (mAdapter != null) {
-                mAdapter = new DeviceAdapter(mContext);
-                rvDevices.setAdapter(mAdapter);
-            }
-        }
-    }
 }
