@@ -72,6 +72,7 @@ public class LoginActivity extends AppCompatActivity {
         tvForgotPassword.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Utils.toastText(mContext, getString(R.string.service_fee));
                 new MaterialDialog.Builder(mContext)
                         .title(R.string.reset_pin)
                         .content(R.string.are_you_sure)
@@ -88,7 +89,6 @@ public class LoginActivity extends AppCompatActivity {
 
             }
         });
-
 
         etPin = findViewById(R.id.et_pin);
 

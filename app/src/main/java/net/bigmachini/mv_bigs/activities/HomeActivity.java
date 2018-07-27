@@ -35,7 +35,6 @@ import net.bigmachini.mv_bigs.adapters.UserAdapter;
 import net.bigmachini.mv_bigs.db.controllers.DeviceController;
 import net.bigmachini.mv_bigs.db.controllers.RecordController;
 import net.bigmachini.mv_bigs.db.controllers.UserController;
-import net.bigmachini.mv_bigs.db.entities.RecordEntity;
 import net.bigmachini.mv_bigs.db.entities.UserEntity;
 import net.bigmachini.mv_bigs.services.APIListResponse;
 import net.bigmachini.mv_bigs.services.APIService;
@@ -114,25 +113,7 @@ public class HomeActivity extends AppCompatActivity
         btnDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                List<UserEntity> dUsers = new ArrayList<>(mAdapter.getUsers());
-                StringBuilder sb = new StringBuilder();
-                for (int i = dUsers.size() - 1; i >= 0; i--) {
-                    if (dUsers.get(i).isSelected()) {
-                        UserEntity user = dUsers.get(i);
-                        List<RecordEntity> recordEntities = mRecordController.getRecordsByUserId(user.getId());
-                        if (recordEntities.size() > 0) {
-                            sb.append(user.getName() + "\n");
-                        } else {
-                            dUsers.remove(i);
-                        }
-                    }
-                }
-                if (sb.toString().isEmpty() || sb.toString().length() != 0) {
-                    Utils.toastText(mContext, "Please delete all ids for user(s):\n" + sb.toString());
-                }
-
-                mAdapter.clear();
-                mAdapter.updateList(dUsers);
+              deleteUser(mContext, Global.gSelectedUser.getId());
             }
         });
 
@@ -521,7 +502,6 @@ public class HomeActivity extends AppCompatActivity
         }
     };
 
-
     private void updateDatabase(List<UserStructure> data) {
         for (UserStructure userStructure : data) {
             UserEntity userEntity = new UserEntity();
@@ -531,7 +511,6 @@ public class HomeActivity extends AppCompatActivity
             mUserController.createUser(userEntity);
         }
     }
-
 
     public void createUser(Context context, UserStructure userStructure) {
         if (Utils.CheckConnection(context)) {
@@ -597,7 +576,6 @@ public class HomeActivity extends AppCompatActivity
             }
         }
     }
-
 
     public void createRecord(Context context, final int recordId) {
         if (Utils.CheckConnection(context)) {
@@ -713,6 +691,68 @@ public class HomeActivity extends AppCompatActivity
             }
         }
     }
+    public void deleteUser(Context context, final int userId) {
+        if (Utils.CheckConnection(context)) {
 
+            HashMap<String, Object> params = new HashMap<>();
+            params.put("id", userId);
+            params.put("device_id", Global.gSelectedDevice.getId());
+            MyAPI myAPI = APIService.createService(MyAPI.class, 60);
+            Call<APIListResponse<UserStructure>> call = myAPI.deleteUser(params);
+            call.enqueue(new Callback<APIListResponse<UserStructure>>() {
+                @Override
+                public void onResponse(Call<APIListResponse<UserStructure>> call, Response<APIListResponse<UserStructure>> response) {
+
+                    if (progressDialog != null && progressDialog.isShowing())
+                        progressDialog.dismiss();
+                    try {
+                        if (response.code() >= 200 && response.code() < 300) {
+                            if (response.body().nStatus < 10) {
+                                List<UserStructure> users = response.body().data;
+                                if (users.size() == 0) {
+                                    Toast.makeText(mContext, getString(R.string.no_users_found), Toast.LENGTH_LONG).show();
+                                }
+                                mUserController.deleteByUserId(userId);
+                                mAdapter = new UserAdapter(mContext, btnDelete, progressDialog);
+                                mRecyclerView.setAdapter(mAdapter);
+                                mAdapter.notifyDataSetChanged();
+                                new SweetAlertDialog(mContext, SweetAlertDialog.SUCCESS_TYPE)
+                                        .setTitleText("SUCCESS!")
+                                        .setContentText("User: " + Global.gSelectedUser.getName() + " Deleted Successfully")
+                                        .show();
+                                Global.gSelectedKey = 0;
+                                Global.gSelectedAction = "";
+                            } else {
+                                Toast.makeText(mContext, getString(R.string.no_users_found), Toast.LENGTH_LONG).show();
+
+                            }
+                        } else {
+                            Toast.makeText(mContext, response.body().strMessage.toString(), Toast.LENGTH_LONG).show();
+                        }
+                    } catch (Exception e) {
+
+                        if (progressDialog != null && progressDialog.isShowing())
+                            progressDialog.dismiss();
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<APIListResponse<UserStructure>> call, Throwable t) {
+                    if (progressDialog != null && progressDialog.isShowing())
+                        progressDialog.dismiss();
+                    t.printStackTrace();
+                }
+            });
+        } else {
+            Utils.toastText(mContext, getString(R.string.no_internet));
+            if (progressDialog != null && progressDialog.isShowing())
+                progressDialog.dismiss();
+            if (mAdapter != null) {
+                mAdapter = new UserAdapter(mContext, btnDelete, progressDialog);
+                mRecyclerView.setAdapter(mAdapter);
+            }
+        }
+    }
 
 }

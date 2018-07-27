@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -113,38 +114,37 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     public void onBindViewHolder(final UserAdapter.ViewHolder holder, final int position) {
         final UserEntity user = mUsers.get(position);
         holder.tvName.setText(user.getName());
-        holder.cbSelected.setChecked(user.isSelected());
+        holder.cbSelected.setOnCheckedChangeListener(null);
         holder.tvIds.setText(getIds(mRecordController.getRecordsByUserId(user.getId())));
         holder.view.setBackgroundColor(Color.LTGRAY);
+
+        //in some cases, it will prevent unwanted situations
+
+
+        //if true, your checkbox will be selected, else unselected
+        holder.cbSelected.setChecked(user.isSelected());
+
+        holder.cbSelected.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                //set your object's last status
+                user.setSelected(isChecked);
+                if (isChecked == true && checkDeviceRecords(user.getId())) {
+                        Utils.toastText(mContext, mContext.getString(R.string.delete_records));
+                        holder.cbSelected.setChecked(false);
+                        user.setSelected(false);
+                }
+
+                holder.view.setBackgroundColor(user.isSelected() ? Color.CYAN : Color.LTGRAY);
+                Global.gSelectedUser = user;
+                showDeleteButton();
+            }
+        });
 
         holder.ll_checkbox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!checkDeviceRecords(user.getId())) {
-                    holder.cbSelected.setChecked(!holder.cbSelected.isChecked());
-                    user.setSelected(!holder.cbSelected.isChecked());
-                    holder.view.setBackgroundColor(user.isSelected() ? Color.CYAN : Color.LTGRAY);
-                    mUserController.createUser(user);
-                    updateList();
-                } else {
-                    Utils.toastText(mContext, mContext.getString(R.string.delete_records));
-                }
-            }
-        });
-
-        holder.cbSelected.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                if (!checkDeviceRecords(user.getId())) {
-                    holder.cbSelected.setChecked(!holder.cbSelected.isChecked());
-                    user.setSelected(!holder.cbSelected.isChecked());
-                    holder.view.setBackgroundColor(user.isSelected() ? Color.CYAN : Color.LTGRAY);
-                    mUserController.createUser(user);
-                    updateList();
-                } else {
-                    Utils.toastText(mContext, mContext.getString(R.string.delete_records));
-                }
+                user.setSelected(!holder.cbSelected.isChecked());
             }
         });
 

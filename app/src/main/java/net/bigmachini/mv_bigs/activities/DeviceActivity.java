@@ -36,8 +36,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class DeviceActivity extends AppCompatActivity {
-
-
     public RecyclerView rvDevices;
     DeviceController mDeviceController;
     Context mContext;
@@ -189,6 +187,4 @@ public class DeviceActivity extends AppCompatActivity {
             mDeviceController.createDevice(deviceEntity);
         }
     }
-
-
 }

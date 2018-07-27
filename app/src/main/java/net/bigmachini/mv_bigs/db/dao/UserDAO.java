@@ -34,4 +34,6 @@ public interface UserDAO {
     @Query("DELETE  FROM user_table WHERE device_id=:deviceId")
     void deleteByDeviceId(int deviceId);
 
+    @Query("DELETE  FROM user_table WHERE id=:userId")
+    void deleteByUserId(int userId);
 }

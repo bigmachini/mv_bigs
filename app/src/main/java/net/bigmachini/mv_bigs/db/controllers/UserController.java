@@ -41,5 +41,10 @@ public class UserController extends BaseController {
     public void deleteAllUsers() {
         mUserDao.deleteAll();
     }
+
+    public void deleteByUserId(int userId) {
+
+        mUserDao.deleteByUserId(userId);
+    }
 }
 
