@@ -7,6 +7,9 @@ import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 
 import com.google.gson.Gson;
+import com.microsoft.appcenter.AppCenter;
+import com.microsoft.appcenter.analytics.Analytics;
+import com.microsoft.appcenter.crashes.Crashes;
 
 import net.bigmachini.mv_bigs.Constants;
 import net.bigmachini.mv_bigs.R;
@@ -24,6 +27,7 @@ public class SplashScreen extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash_screen);
+        AppCenter.start(getApplication(), "856d64ed-a118-41ad-ad5c-d7f8a165a99b", Analytics.class, Crashes.class);
         final Context mContext = SplashScreen.this;
         final Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
@@ -40,6 +44,8 @@ public class SplashScreen extends AppCompatActivity {
                 finish();
             }
         }, 3000);
+
+
 
        // Utils.setStringSetting(mContext, Constants.USERS, "[]");
 
