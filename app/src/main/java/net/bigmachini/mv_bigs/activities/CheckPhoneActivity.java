@@ -5,8 +5,13 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TextInputEditText;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -27,9 +32,12 @@ import retrofit2.Response;
 
 public class CheckPhoneActivity extends AppCompatActivity {
 
-    EditText edtPhoneNumber;
-    Button btnCheckNumber;
+    // EditText edtPhoneNumber;
+    // Button btnCheckNumber;
     private Context mContext;
+    TextInputLayout phoneNumberWrapper;
+    TextInputEditText phoneNumberEditText;
+    AppCompatButton checkNumberButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,20 +56,36 @@ public class CheckPhoneActivity extends AppCompatActivity {
         });
 
         fab.setVisibility(View.GONE);
-        edtPhoneNumber = findViewById(R.id.edt_phone_number);
-        btnCheckNumber = findViewById(R.id.btn_check_account);
-        btnCheckNumber.setOnClickListener(new View.OnClickListener() {
+
+        phoneNumberWrapper = (TextInputLayout) findViewById(R.id.client_phone_number_input_layout);
+        phoneNumberEditText = (TextInputEditText) findViewById(R.id.edt_phone_number);
+        checkNumberButton = (AppCompatButton) findViewById(R.id.btn_check_account);
+
+        checkNumberButton.setOnClickListener(view -> {
+            String phoneNumber = phoneNumberEditText.getText().toString().trim();
+            if (phoneNumber == null || phoneNumber.isEmpty() || phoneNumber.length() == 0) {
+                phoneNumberWrapper.setError(getString(R.string.invalid_phone_number));
+                return;
+            }
+
+            checkPhone(mContext, phoneNumber);
+            Utils.setStringSetting(mContext, Constants.PHONE_NUMBER, phoneNumber);
+        });
+
+        phoneNumberEditText.addTextChangedListener(new TextWatcher() {
             @Override
-            public void onClick(View v) {
-                String phoneNumber = edtPhoneNumber.getText().toString().trim();
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
-                if (phoneNumber == null || phoneNumber.isEmpty() || phoneNumber.length() == 0) {
-                    edtPhoneNumber.setError(getString(R.string.invalid_phone_number));
-                    return;
-                }
+            }
 
-                checkPhone(mContext, phoneNumber);
-                Utils.setStringSetting(mContext, Constants.PHONE_NUMBER, phoneNumber);
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                phoneNumberWrapper.setError(null);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
             }
         });
     }

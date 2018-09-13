@@ -70,4 +70,6 @@
     <string name="device_serial_no">Serial No</string>
     <string name="invalid_serial_no">Invalid Serial No</string>
     <string name="service_fee">The service charges Ksh. 5. Please ensure you have sufficient credit to receive the pin</string>
+
+    <string name="enter_pin">Enter Pin:</string>
 </resources>

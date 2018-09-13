@@ -4,31 +4,58 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_margin="16dp"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".activities.CheckPhoneActivity"
     tools:showIn="@layout/activity_check_phone">
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:gravity="center_vertical"
-        android:layout_margin="16dp"
-        android:orientation="vertical"
-        android:layout_height="match_parent">
 
+    <android.support.design.widget.TextInputLayout
+        android:id="@+id/client_phone_number_input_layout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/guideline"
+        android:layout_marginRight="8dp"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginLeft="8dp"
+        app:counterEnabled="true"
+        app:counterMaxLength="10"
+        app:counterTextAppearance="@style/CounterText"
+        app:layout_constraintLeft_toLeftOf="parent"
+        >
 
-        <EditText
-            android:layout_width="match_parent"
+        <android.support.design.widget.TextInputEditText
             android:id="@+id/edt_phone_number"
-            android:inputType="numberSigned"
-            android:lines="1"
-            android:maxLength="10"
-            android:layout_height="wrap_content"
-            android:hint="@string/enter_phone"/>
-
-        <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/btn_check_account"
-            android:text="@string/check_phone"/>
-    </LinearLayout>
+            android:hint="@string/enter_phone"
+            android:lines="1"
+            android:focusableInTouchMode="true"
+            android:maxLength="10"
+            android:inputType="numberSigned"/>
+    </android.support.design.widget.TextInputLayout>
 
+    <android.support.v7.widget.AppCompatButton
+        android:id="@+id/btn_check_account"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/check_phone"
+        app:layout_constraintTop_toBottomOf="@+id/guideline"
+        android:layout_marginTop="8dp"
+        android:layout_marginRight="8dp"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginLeft="8dp"
+        android:fontFamily="sans-serif"
+        android:textSize="18sp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:textColor="@color/white"
+        android:background="@drawable/button_background"
+        />
+
+    <android.support.constraint.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.5" />
 </android.support.constraint.ConstraintLayout>

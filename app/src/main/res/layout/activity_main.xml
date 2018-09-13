@@ -1,39 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
+    android:background="@color/white"
     tools:context=".MainActivity">
 
-
     <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:id="@+id/toggleHolder"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:weightSum="2">
 
         <CheckBox
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Toggle LED"
             android:id="@+id/checkboxLED1"
-            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
             android:checked="false"
-            android:layout_alignLeft="@+id/bluetoothStatus"
-            android:layout_alignStart="@+id/bluetoothStatus"
-            android:scaleX="1.7"
-            android:scaleY="1.7"
+            android:text="Toggle LED"
+            android:textSize="18sp"
+            android:fontFamily="sans-serif"
             android:textStyle="bold"
-            android:layout_gravity="center_horizontal" />
+            android:layout_gravity="center_horizontal"
+            />
 
         <LinearLayout
-            android:orientation="horizontal"
+            android:id="@+id/statusHolder"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:padding="5dp"
             android:layout_width="match_parent"
-            android:layout_marginTop="10dp"
-            android:layout_height="wrap_content">
+            android:layout_height="match_parent">
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -41,86 +52,116 @@
                 android:text="RX:"
                 android:ellipsize="end"
                 android:maxLines="1"
+                android:layout_marginBottom="5dp"
                 android:textStyle="bold" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="0.9"
                 android:ellipsize="end"
+                android:layout_marginBottom="5dp"
                 android:maxLines="1"
                 android:text="&lt;Read Buffer>"
                 android:id="@+id/readBuffer"
                 android:layout_centerHorizontal="true" />
         </LinearLayout>
-
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.1"
-                android:text="Status:"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textStyle="bold" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.9"
-
-                android:text="&lt;Bluetooth Status>"
-                android:id="@+id/bluetoothStatus"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:layout_centerHorizontal="true"
-                android:layout_alignTop="@+id/checkboxLED1" />
-        </LinearLayout>
-
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Bluetooth ON"
-            android:id="@+id/scan"
-            android:layout_centerVertical="true"
-            android:layout_toStartOf="@+id/off" />
-
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Bluetooth OFF"
-            android:id="@+id/off"
-            android:layout_alignBottom="@+id/scan"
-            android:layout_toEndOf="@+id/PairedBtn"
-            android:layout_toRightOf="@+id/PairedBtn" />
-
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Show paired Devices"
-            android:id="@+id/PairedBtn"
-            android:layout_below="@+id/scan"
-            android:layout_toStartOf="@+id/discover" />
-
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Discover New Devices"
-            android:id="@+id/discover"
-            android:layout_below="@+id/off"
-            android:layout_toRightOf="@+id/checkboxLED1"
-            android:layout_toEndOf="@+id/checkboxLED1" />
-
-        <ListView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/devicesListView"
-            android:choiceMode="singleChoice"
-            android:layout_below="@+id/PairedBtn"
-            android:layout_alignRight="@+id/off"
-            android:layout_alignEnd="@+id/off" />
-
     </LinearLayout>
 
-</RelativeLayout>
+    <TextView
+        android:id="@+id/bluetoothStatus"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Status:"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:fontFamily="sans-serif"
+        android:textStyle="bold"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="5dp"
+        app:layout_constraintTop_toBottomOf="@+id/toggleHolder"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="@+id/guideline" />
+
+    <android.support.v7.widget.AppCompatButton
+        android:id="@+id/scan"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:text="Bluetooth ON"
+        android:textSize="16sp"
+        android:fontFamily="sans-serif"
+        android:textColor="@color/white"
+        android:background="@drawable/button_background"
+        android:backgroundTint="@color/colorAccent"
+        app:layout_constraintTop_toBottomOf="@+id/bluetoothStatus"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="@+id/guideline"
+        />
+
+    <android.support.v7.widget.AppCompatButton
+        android:id="@+id/off"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:text="Bluetooth OFF"
+        android:textSize="16sp"
+        android:fontFamily="sans-serif"
+        android:textColor="@color/white"
+        android:backgroundTint="#677380"
+        android:background="@drawable/button_background"
+        app:layout_constraintTop_toBottomOf="@+id/bluetoothStatus"
+        app:layout_constraintLeft_toLeftOf="@+id/guideline"
+        app:layout_constraintRight_toRightOf="parent" />
+
+    <android.support.v7.widget.AppCompatButton
+        android:id="@+id/PairedBtn"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:text="Show paired devices"
+        android:textSize="16sp"
+        android:fontFamily="sans-serif"
+        android:textColor="@color/white"
+        android:backgroundTint="#4CAF50"
+        android:background="@drawable/button_background"
+        app:layout_constraintTop_toBottomOf="@+id/scan"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="@+id/guideline"
+        />
+
+    <android.support.v7.widget.AppCompatButton
+        android:id="@+id/discover"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Discover New Devices"
+        android:layout_margin="8dp"
+        android:textSize="16sp"
+        android:fontFamily="sans-serif"
+        android:textColor="@color/white"
+        android:backgroundTint="#F44336"
+        android:background="@drawable/button_background"
+        app:layout_constraintTop_toBottomOf="@+id/off"
+        app:layout_constraintLeft_toLeftOf="@+id/guideline"
+        app:layout_constraintRight_toRightOf="parent"/>
+
+    <ListView
+        android:id="@+id/devicesListView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginLeft="8dp"
+        android:choiceMode="singleChoice"
+        app:layout_constraintTop_toBottomOf="@+id/discover"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+     />
+
+    <android.support.constraint.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.5" />
+
+</android.support.constraint.ConstraintLayout>

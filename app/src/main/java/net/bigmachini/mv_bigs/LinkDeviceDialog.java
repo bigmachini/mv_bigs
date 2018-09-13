@@ -4,7 +4,12 @@ import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.TextInputEditText;
+import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.DialogFragment;
+import android.support.v7.widget.AppCompatButton;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,10 +33,13 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class LinkDeviceDialog extends DialogFragment {
-    EditText edtMacAddress;
-    EditText edtSerial;
+//    EditText edtMacAddress;
+//    EditText edtSerial;
     MaterialDialog mDialog;
     Context mContext;
+    TextInputLayout macAddressInputLayout, serialNumberInputLayout;
+    TextInputEditText macAddressEditText, serialNumberEditText;
+    AppCompatButton linkDeviceButton;
 
     public LinkDeviceDialog() {
     }
@@ -47,26 +55,71 @@ public class LinkDeviceDialog extends DialogFragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.layout_dialog, container, false);
         getDialog().setTitle("Link Device: ");
-        Button btnLink = view.findViewById(R.id.btn_link_device);
-        edtMacAddress = view.findViewById(R.id.edt_mac_address);
-        edtSerial = view.findViewById(R.id.edt_serial);
+//        Button btnLink = view.findViewById(R.id.btn_link_device);
+//        edtMacAddress = view.findViewById(R.id.edt_mac_address);
+//        edtSerial = view.findViewById(R.id.edt_serial);
         mContext = getContext();
-        btnLink.setOnClickListener(doneAction);
+        macAddressInputLayout = view.findViewById(R.id.mac_address_input_layout);
+        serialNumberInputLayout = view.findViewById(R.id.serial_text_input_layout);
+        macAddressEditText = view.findViewById(R.id.mac_address_edit_text);
+        serialNumberEditText = view.findViewById(R.id.serial_edit_text);
+        linkDeviceButton = view.findViewById(R.id.btn_link_device);
+
+        linkDeviceButton.setOnClickListener(doneAction);
+
+        macAddressEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                macAddressInputLayout.setError(null);
+                serialNumberInputLayout.setError(null);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
+        serialNumberEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                macAddressInputLayout.setError(null);
+                serialNumberInputLayout.setError(null);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
         return view;
     }
+
+
 
     View.OnClickListener doneAction = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            String macAddress = edtMacAddress.getText().toString().trim();
+            String macAddress = macAddressEditText.getText().toString().trim();
             if (macAddress.isEmpty() || macAddress == null || macAddress.length() == 0) {
-                edtMacAddress.setError(getString(R.string.mac_address_invalid));
+                macAddressInputLayout.setError(getString(R.string.mac_address_invalid));
                 return;
             }
 
-            String serialNo = edtSerial.getText().toString().trim();
+            String serialNo = serialNumberEditText.getText().toString().trim();
             if (serialNo.isEmpty() || serialNo == null || serialNo.length() == 0) {
-                edtSerial.setError(getString(R.string.invalid_serial_no));
+                serialNumberInputLayout.setError(getString(R.string.invalid_serial_no));
                 return;
             }
 

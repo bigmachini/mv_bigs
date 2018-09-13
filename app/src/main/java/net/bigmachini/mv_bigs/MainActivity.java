@@ -15,6 +15,7 @@ import android.os.SystemClock;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.AppCompatButton;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -38,10 +39,10 @@ public class MainActivity extends AppCompatActivity {
     // GUI Components
     private TextView mBluetoothStatus;
     private TextView mReadBuffer;
-    private Button mScanBtn;
-    private Button mOffBtn;
-    private Button mListPairedDevicesBtn;
-    private Button mDiscoverBtn;
+    private AppCompatButton mScanBtn;
+    private AppCompatButton mOffBtn;
+    private AppCompatButton mListPairedDevicesBtn;
+    private AppCompatButton mDiscoverBtn;
     private BluetoothAdapter mBTAdapter;
     private Set<BluetoothDevice> mPairedDevices;
     private ArrayAdapter<String> mBTArrayAdapter;
@@ -52,8 +53,6 @@ public class MainActivity extends AppCompatActivity {
     private Handler mHandler; // Our main handler that will receive callback notifications
     private ConnectedThread mConnectedThread; // bluetooth background worker thread to send and receive data
     private BluetoothSocket mBTSocket = null; // bi-directional client-to-client data path
-
-
 
     // #defines for identifying shared types between calling functions
     private final static int REQUEST_ENABLE_BT = 1; // used to identify adding bluetooth names
@@ -68,10 +67,10 @@ public class MainActivity extends AppCompatActivity {
 
         mBluetoothStatus = (TextView) findViewById(R.id.bluetoothStatus);
         mReadBuffer = (TextView) findViewById(R.id.readBuffer);
-        mScanBtn = (Button) findViewById(R.id.scan);
-        mOffBtn = (Button) findViewById(R.id.off);
-        mDiscoverBtn = (Button) findViewById(R.id.discover);
-        mListPairedDevicesBtn = (Button) findViewById(R.id.PairedBtn);
+        mScanBtn = (AppCompatButton) findViewById(R.id.scan);
+        mOffBtn = (AppCompatButton) findViewById(R.id.off);
+        mDiscoverBtn = (AppCompatButton) findViewById(R.id.discover);
+        mListPairedDevicesBtn = (AppCompatButton) findViewById(R.id.PairedBtn);
         mLED1 = (CheckBox) findViewById(R.id.checkboxLED1);
 
         mBTArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
@@ -100,9 +99,9 @@ public class MainActivity extends AppCompatActivity {
 
                 if (msg.what == CONNECTING_STATUS) {
                     if (msg.arg1 == 1)
-                        mBluetoothStatus.setText("Connected to Device: " + (String) (msg.obj));
+                        mBluetoothStatus.setText("Status: Connected to Device: " + (String) (msg.obj));
                     else
-                        mBluetoothStatus.setText("Connection Failed");
+                        mBluetoothStatus.setText("Status: Connection Failed");
                 }
             }
         };
@@ -158,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
         if (!mBTAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-            mBluetoothStatus.setText("Bluetooth enabled");
+            mBluetoothStatus.setText("Status: Bluetooth enabled");
             Toast.makeText(getApplicationContext(), "Bluetooth turned on", Toast.LENGTH_SHORT).show();
 
         } else {
@@ -175,15 +174,15 @@ public class MainActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 // The user picked a contact.
                 // The Intent's data Uri identifies which contact was selected.
-                mBluetoothStatus.setText("Enabled");
+                mBluetoothStatus.setText("Status: Enabled");
             } else
-                mBluetoothStatus.setText("Disabled");
+                mBluetoothStatus.setText("Status: Disabled");
         }
     }
 
     private void bluetoothOff(View view) {
         mBTAdapter.disable(); // turn off
-        mBluetoothStatus.setText("Bluetooth disabled");
+        mBluetoothStatus.setText("Status: Bluetooth disabled");
         Toast.makeText(getApplicationContext(), "Bluetooth turned Off", Toast.LENGTH_SHORT).show();
     }
 
@@ -237,7 +236,7 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            mBluetoothStatus.setText("Connecting...");
+            mBluetoothStatus.setText("Status: Connecting...");
             // Get the device MAC address, which is the last 17 chars in the View
             String info = ((TextView) v).getText().toString();
             final String address = info.substring(info.length() - 17);

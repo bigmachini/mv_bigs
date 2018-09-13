@@ -5,11 +5,17 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TextInputEditText;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
@@ -32,11 +38,16 @@ import retrofit2.Response;
 
 public class RegistrationActivity extends AppCompatActivity {
 
-    Button btnRegister;
-    EditText etPhoneNumber, etPin, etConfirmPin;
+//    Button btnRegister;
+//    EditText etPhoneNumber, etPin, etConfirmPin;
     Context mContext;
     private MaterialDialog mDialog;
     private BaseStructure baseStructure;
+
+    private TextInputLayout phoneNumberWrapper, pinNumberWrapper, confirmPinNumberWrapper;
+    private TextInputEditText phoneNumberEditText, pinNumberEditText, confirmPinNumberEditText;
+    private AppCompatButton registerButton;
+    private TextView backToLogin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,70 +55,124 @@ public class RegistrationActivity extends AppCompatActivity {
         setContentView(R.layout.activity_registration);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        mContext = RegistrationActivity.this;
 
         FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        fab.setOnClickListener(v -> {
+            Snackbar.make(v, "Replace with your own action", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show();
+        });
+        fab.setVisibility(View.GONE);
+
+        phoneNumberWrapper = findViewById(R.id.et_phone_number_wrapper);
+        pinNumberWrapper = findViewById(R.id.et_pin_input_layout);
+        confirmPinNumberWrapper = findViewById(R.id.et_confirm_pin_input_Layout);
+
+        phoneNumberEditText = findViewById(R.id.et_phone_number);
+        pinNumberEditText = findViewById(R.id.et_pin);
+        confirmPinNumberEditText = findViewById(R.id.et_confirm_pin);
+
+        registerButton = findViewById(R.id.btn_register);
+        backToLogin = findViewById(R.id.back_to_login);
+
+        phoneNumberEditText.setText(Utils.getStringSetting(mContext, Constants.PHONE_NUMBER, ""));
+        Utils.setStringSetting(mContext, Constants.PHONE_NUMBER, "");
+        phoneNumberEditText.setEnabled(false);
+
+        registerButton.setOnClickListener(v -> {
+            String phoneNumber = phoneNumberEditText.getText().toString().trim();
+            String pin = pinNumberEditText.getText().toString().trim();
+            String confirmPin = confirmPinNumberEditText.getText().toString().trim();
+
+            if (phoneNumber.isEmpty() || phoneNumber.length() == 0 || phoneNumber == null) {
+                phoneNumberWrapper.setError("Invalid Phone Number");
+                return;
+            }
+
+            if (pin.isEmpty() || pin.length() == 0 || pin == null) {
+                pinNumberWrapper.setError("Invalid Pin Number");
+                return;
+            }
+
+            if (confirmPin.isEmpty() || confirmPin.length() == 0 || confirmPin == null) {
+                confirmPinNumberWrapper.setError("Invalid Pin Number");
+                return;
+            }
+
+            if (!confirmPin.equals(pin)) {
+                confirmPinNumberWrapper.setError(("The pin do not match, try again."));
+                return;
+            }
+
+            mDialog = new MaterialDialog.Builder(mContext)
+                    .title(R.string.registering_user)
+                    .content(R.string.please_wait)
+                    .progress(true, 0)
+                    .show();
+            RegistrationModel registrationModel = new RegistrationModel();
+            registrationModel.phoneNumber = phoneNumber;
+            registrationModel.pin = pin;
+            registerUser(mContext, registrationModel);
+        });
+
+        backToLogin.setOnClickListener(v -> {
+            Intent loginIntent = new Intent(mContext, LoginActivity.class);
+            startActivity(loginIntent);
+        });
+
+        phoneNumberEditText.addTextChangedListener(new TextWatcher() {
             @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                phoneNumberWrapper.setError(null);
+                confirmPinNumberWrapper.setError(null);
+                pinNumberWrapper.setError(null);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
             }
         });
 
-        fab.setVisibility(View.GONE);
-
-        btnRegister = findViewById(R.id.btn_register);
-        etConfirmPin = findViewById(R.id.et_confirm_pin);
-        etPin = findViewById(R.id.et_pin);
-        etPhoneNumber = findViewById(R.id.et_phone_number);
-        mContext = RegistrationActivity.this;
-
-        etPhoneNumber.setText(Utils.getStringSetting(mContext, Constants.PHONE_NUMBER, ""));
-        Utils.setStringSetting(mContext, Constants.PHONE_NUMBER, "");
-        etPhoneNumber.setEnabled(false);
-        btnRegister.setOnClickListener(new View.OnClickListener() {
+        pinNumberEditText.addTextChangedListener(new TextWatcher() {
             @Override
-            public void onClick(View v) {
-                String phoneNumber = etPhoneNumber.getText().toString().trim();
-                boolean proceed = true;
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
-                if (phoneNumber.isEmpty() || phoneNumber.length() == 0 || phoneNumber == null) {
-                    etPhoneNumber.setError("Invalid Phone Number");
-                    proceed = false;
+            }
 
-                }
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                phoneNumberWrapper.setError(null);
+                confirmPinNumberWrapper.setError(null);
+                pinNumberWrapper.setError(null);
+            }
 
-                String pin = etPin.getText().toString().trim();
+            @Override
+            public void afterTextChanged(Editable s) {
 
-                if (pin.isEmpty() || pin.length() == 0 || pin == null) {
-                    etPin.setError("Invalid Pin format");
-                    proceed = false;
-                }
+            }
+        });
 
-                String confirmPin = etConfirmPin.getText().toString().trim();
+        confirmPinNumberEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
-                if (confirmPin.isEmpty() || confirmPin.length() == 0 || confirmPin == null) {
-                    etConfirmPin.setError("Invalid pin format");
-                    proceed = false;
-                }
+            }
 
-                if (proceed == false)
-                    return;
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                phoneNumberWrapper.setError(null);
+                confirmPinNumberWrapper.setError(null);
+                pinNumberWrapper.setError(null);
+            }
 
-                if (!new String(pin).equals(new String(confirmPin))) {
-                    Utils.toastText(mContext, "The pin did not match try again");
-                    etConfirmPin.setText("");
-                    return;
-                }
-                mDialog = new MaterialDialog.Builder(mContext)
-                        .title(R.string.registering_user)
-                        .content(R.string.please_wait)
-                        .progress(true, 0)
-                        .show();
-                RegistrationModel registrationModel = new RegistrationModel();
-                registrationModel.phoneNumber = phoneNumber;
-                registrationModel.pin = pin;
-                registerUser(mContext, registrationModel);
+            @Override
+            public void afterTextChanged(Editable s) {
 
             }
         });

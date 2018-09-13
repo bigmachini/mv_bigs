@@ -6,8 +6,13 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TextInputEditText;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -36,13 +41,18 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
-    Button btnLogin;
-    EditText etPin;
-    TextView tvForgotPassword;
+//    Button btnLogin;
+//    EditText etPin;
+
     private MaterialDialog mDialog;
     private LoginStructure loginStructure;
     Context mContext;
     RegistrationModel registrationModel;
+
+    TextInputLayout pinInputLayoutHolder;
+    TextInputEditText pinEditText;
+    AppCompatButton loginButton;
+    TextView tvForgotPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +77,11 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         fab.setVisibility(View.GONE);
-        btnLogin = findViewById(R.id.btn_login);
+        // btnLogin = findViewById(R.id.btn_login);
+        pinInputLayoutHolder = (TextInputLayout) findViewById(R.id.et_pin_input_layout);
+        pinEditText = (TextInputEditText) findViewById(R.id.et_pin);
+        loginButton = (AppCompatButton) findViewById(R.id.btn_login);
+
         tvForgotPassword = findViewById(R.id.tv_forgot_pin);
         tvForgotPassword.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -90,24 +104,38 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        etPin = findViewById(R.id.et_pin);
+        loginButton.setOnClickListener(v -> {
+            String pin = pinEditText.getText().toString().trim();
+            if (pin.isEmpty() || pin.length() == 0) {
+                pinInputLayoutHolder.setError("Pin value missing");
+                return;
+            }
+            mDialog = new MaterialDialog.Builder(mContext)
+                    .title(R.string.login)
+                    .content(R.string.please_wait)
+                    .progress(true, 0)
+                    .show();
+            performLogin(mContext, pin);
+        });
 
-        btnLogin.setOnClickListener(new View.OnClickListener() {
+
+        pinEditText.addTextChangedListener(new TextWatcher() {
             @Override
-            public void onClick(View v) {
-                String pin = etPin.getText().toString().trim();
-                if (pin.isEmpty() || pin.length() == 0) {
-                    Utils.toastText(mContext, "Invalid pin");
-                    return;
-                }
-                mDialog = new MaterialDialog.Builder(mContext)
-                        .title(R.string.login)
-                        .content(R.string.please_wait)
-                        .progress(true, 0)
-                        .show();
-                performLogin(mContext, pin);
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                pinInputLayoutHolder.setError(null);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
             }
         });
+
     }
 
 
