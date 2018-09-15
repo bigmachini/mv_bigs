@@ -80,7 +80,7 @@ public class DeviceActivity extends AppCompatActivity {
 
                     FragmentManager fm = getSupportFragmentManager();
                     LinkDeviceDialog custom = LinkDeviceDialog.newInstance();
-                    custom.show(fm,"");
+                    custom.show(fm, "");
 
                 } else {
                     Utils.toastText(mContext, getString(R.string.no_internet));
@@ -142,11 +142,7 @@ public class DeviceActivity extends AppCompatActivity {
                         if (response.code() >= 200 && response.code() < 300) {
                             if (response.body().nStatus < 10) {
                                 List<DeviceStructure> devices = response.body().data;
-                                updateDatabase(devices);
-                                mAdapter = new DeviceAdapter(mContext);
-                                rvDevices.setAdapter(mAdapter);
-                                mAdapter.notifyDataSetChanged();
-
+                                updateDevices(devices);
                                 if (devices.size() == 0) {
                                     Toast.makeText(mContext, getString(R.string.no_device_found), Toast.LENGTH_LONG).show();
                                 }
@@ -177,7 +173,15 @@ public class DeviceActivity extends AppCompatActivity {
         }
     }
 
+    public void updateDevices(List<DeviceStructure> devices) {
+        updateDatabase(devices);
+        mAdapter = new DeviceAdapter(mContext);
+        rvDevices.setAdapter(mAdapter);
+        mAdapter.notifyDataSetChanged();
+    }
+
     public void updateDatabase(List<DeviceStructure> data) {
+        mDeviceController.deleteAllDevices();
         for (DeviceStructure deviceStructure : data) {
             DeviceEntity deviceEntity = new DeviceEntity();
             deviceEntity.setId(deviceStructure.id);

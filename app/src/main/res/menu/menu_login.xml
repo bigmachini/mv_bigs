@@ -3,12 +3,14 @@
     xmlns:tools="http://schemas.android.com/tools" tools:context=".TerminalActivity">
 
 
-    <item android:id="@+id/action_create_user"
-        android:title="@string/action_create_user"
-        app:showAsAction="always" />
     <item android:id="@+id/action_connect"
         android:title="@string/action_connect"
         app:showAsAction="always" />
+
+
+    <item android:id="@+id/action_create_user"
+        android:title="@string/action_create_user"
+        app:showAsAction="never" />
 
     <item android:id="@+id/action_disconnect"
         android:title="@string/action_disconnect"

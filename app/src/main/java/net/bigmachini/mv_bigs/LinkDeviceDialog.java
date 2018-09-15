@@ -164,8 +164,7 @@ public class LinkDeviceDialog extends DialogFragment {
                                 List<DeviceStructure> devices = response.body().data;
 
                                 if (mContext instanceof DeviceActivity) {
-                                    ((DeviceActivity) mContext).updateDatabase(devices);
-                                    ((DeviceActivity) mContext).mAdapter.notifyDataSetChanged();
+                                    ((DeviceActivity) mContext).updateDevices(devices);
                                 }
 
                                 if (devices.size() == 0) {
