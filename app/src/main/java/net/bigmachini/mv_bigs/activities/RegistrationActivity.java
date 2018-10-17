@@ -193,7 +193,7 @@ public class RegistrationActivity extends AppCompatActivity {
                         if (response.code() >= 200 && response.code() < 300) {
                             if (response.body().nStatus < 10) {
                                 baseStructure = response.body().data;
-                                Utils.setStringSetting(mContext, Constants.REGISTRATION_MODEL, new Gson().toJson(registrationModel).toString());
+                                Utils.setStringSetting(mContext, Constants.REGISTRATION_MODEL, new Gson().toJson(registrationModel));
                                 startActivity(new Intent(RegistrationActivity.this, LoginActivity.class));
                                 finish();
                             } else {

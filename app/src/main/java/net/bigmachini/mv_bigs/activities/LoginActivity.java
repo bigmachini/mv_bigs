@@ -36,6 +36,7 @@ import net.bigmachini.mv_bigs.structures.ResetPinStructure;
 
 import java.util.HashMap;
 
+import okhttp3.internal.Util;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -138,11 +139,10 @@ public class LoginActivity extends AppCompatActivity {
 
     }
 
-
     public void performLogin(Context context, final String pin) {
         if (Utils.CheckConnection(context)) {
             HashMap<String, Object> params = new HashMap<>();
-            params.put("phone_number", Utils.getStringSetting(mContext, Constants.PHONE_NUMBER, ""));
+            params.put("phone_number", registrationModel.phoneNumber);
             params.put("pin", pin);
             registrationModel.pin = pin;
             MyAPI myAPI = APIService.createService(MyAPI.class, 30);
