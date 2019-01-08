@@ -59,8 +59,8 @@ public class APIService {
                 .build();
 
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://03dcd26b.ngrok.io ")
-                //.baseUrl("http://mvbigs.co.ke:8060")
+                //.baseUrl("http://03dcd26b.ngrok.io ")
+                .baseUrl("http://mvbigs.co.ke:8060")
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .client(client)
                 .build();
