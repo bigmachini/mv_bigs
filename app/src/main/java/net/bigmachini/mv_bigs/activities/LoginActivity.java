@@ -186,7 +186,6 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void offlineLogin(String pin) {
-
         if (registrationModel.userId > 0) {
             if (mDialog.isShowing())
                 mDialog.dismiss();

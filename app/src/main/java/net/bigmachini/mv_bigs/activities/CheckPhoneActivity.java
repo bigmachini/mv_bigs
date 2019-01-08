@@ -12,17 +12,22 @@ import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+
 import net.bigmachini.mv_bigs.Constants;
 import net.bigmachini.mv_bigs.R;
 import net.bigmachini.mv_bigs.Utils;
+import net.bigmachini.mv_bigs.models.RegistrationModel;
 import net.bigmachini.mv_bigs.services.APIResponse;
 import net.bigmachini.mv_bigs.services.APIService;
 import net.bigmachini.mv_bigs.services.MyAPI;
+import net.bigmachini.mv_bigs.structures.RegistrationStructure;
 
 import java.util.HashMap;
 
@@ -95,29 +100,30 @@ public class CheckPhoneActivity extends AppCompatActivity {
             HashMap<String, Object> params = new HashMap<>();
             params.put("phone_number", phoneNumber);
             MyAPI myAPI = APIService.createService(MyAPI.class, 60);
-            Call<APIResponse<Boolean>> call = myAPI.checkAccount(params);
-            call.enqueue(new Callback<APIResponse<Boolean>>() {
+            Call<APIResponse<RegistrationStructure>> call = myAPI.checkAccount(params);
+            call.enqueue(new Callback<APIResponse<RegistrationStructure>>() {
                 @Override
-                public void onResponse(Call<APIResponse<Boolean>> call, Response<APIResponse<Boolean>> response) {
+                public void onResponse(Call<APIResponse<RegistrationStructure>> call, Response<APIResponse<RegistrationStructure>> response) {
                     try {
                         if (response.code() >= 200 && response.code() < 300) {
-                            if (response.body().nStatus < 10) {
-                                if (response.body().data) {
-
+                                if (response.body().nStatus < 10) {
+                                    RegistrationModel registrationModel = new RegistrationModel(response.body().data);
+                                    Utils.setStringSetting(mContext, Constants.REGISTRATION_MODEL, new Gson().toJson(registrationModel));
                                     startActivity(new Intent(CheckPhoneActivity.this, LoginActivity.class));
                                 } else {
                                     startActivity(new Intent(CheckPhoneActivity.this, RegistrationActivity.class));
                                 }
-                            }
+
                         } else {
                             Toast.makeText(mContext, getString(R.string.some_went_wrong), Toast.LENGTH_LONG).show();
                         }
                     } catch (Exception e) {
+                        Log.e("testing", "test: " + e.getMessage());
                     }
                 }
 
                 @Override
-                public void onFailure(Call<APIResponse<Boolean>> call, Throwable t) {
+                public void onFailure(Call<APIResponse<RegistrationStructure>> call, Throwable t) {
                     Toast.makeText(mContext, "Something went wrong, check your internet connection and try again", Toast.LENGTH_SHORT).show();
                 }
             });

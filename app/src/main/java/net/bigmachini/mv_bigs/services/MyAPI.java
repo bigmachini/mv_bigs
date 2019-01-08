@@ -4,6 +4,7 @@ import net.bigmachini.mv_bigs.structures.BaseStructure;
 import net.bigmachini.mv_bigs.structures.DeviceStructure;
 import net.bigmachini.mv_bigs.structures.LoginStructure;
 import net.bigmachini.mv_bigs.structures.RecordStructure;
+import net.bigmachini.mv_bigs.structures.RegistrationStructure;
 import net.bigmachini.mv_bigs.structures.ResetPinStructure;
 import net.bigmachini.mv_bigs.structures.UserStructure;
 
@@ -38,7 +39,7 @@ public interface MyAPI {
 
     @FormUrlEncoded
     @POST("check_account")
-    Call<APIResponse<Boolean>> checkAccount(@FieldMap HashMap<String, Object> params);
+    Call<APIResponse<RegistrationStructure>> checkAccount(@FieldMap HashMap<String, Object> params);
 
     @FormUrlEncoded
     @POST("/create_user")
