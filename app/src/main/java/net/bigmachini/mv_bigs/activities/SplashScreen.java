@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import com.google.gson.Gson;
 import com.microsoft.appcenter.AppCenter;
@@ -33,21 +34,28 @@ public class SplashScreen extends AppCompatActivity {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                RegistrationModel registrationModel = new Gson().fromJson(Utils.getStringSetting(mContext, Constants.REGISTRATION_MODEL, ""), RegistrationModel.class);
 
-                if (registrationModel == null) {
+                try {
+                    RegistrationModel registrationModel = new Gson().fromJson(Utils.getStringSetting(mContext, Constants.REGISTRATION_MODEL, ""), RegistrationModel.class);
+                    Log.e("error" , "registration model " + new Gson().toJson(registrationModel));
+
+                    if (registrationModel == null) {
+                        startActivity(new Intent(SplashScreen.this, CheckPhoneActivity.class));
+                    } else {
+                        startActivity(new Intent(SplashScreen.this, LoginActivity.class));
+                    }
+
+                    finish();
+                } catch (Exception ex) {
                     startActivity(new Intent(SplashScreen.this, CheckPhoneActivity.class));
-                } else {
-                    startActivity(new Intent(SplashScreen.this, LoginActivity.class));
+                } finally {
+                    finish();
                 }
-
-                finish();
             }
         }, 3000);
 
 
-
-       // Utils.setStringSetting(mContext, Constants.USERS, "[]");
+        // Utils.setStringSetting(mContext, Constants.USERS, "[]");
 
     }
 
